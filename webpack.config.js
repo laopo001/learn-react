@@ -22,15 +22,6 @@ module.exports = {
             port: 5000,
             server: { baseDir: [''] }
         }),
-        new webpack.optimize.UglifyJsPlugin({
-            beautify: false,
-            output: {
-                comments: false
-            },
-            compress: {
-                warnings: false
-            }
-        }),
     ],
     module: {
         //加载器配置
@@ -40,15 +31,5 @@ module.exports = {
     },
     resolve: {
         extensions: ['.ts', '.js']
-    },
-    // //其它解决方案配置
-    // resolve: {
-    //     root: 'E:/github/flux-example/src', //绝对路径
-    //     extensions: ['', '.js', '.json', '.scss'],
-    //     alias: {
-    //         AppStore : 'js/stores/AppStores.js',
-    //         ActionType : 'js/actions/ActionType.js',
-    //         AppAction : 'js/actions/AppAction.js'
-    //     }
-    // }
+    }
 };
