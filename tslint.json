@@ -1,0 +1,82 @@
+{
+  "extends": [
+    "tslint:recommended"
+  ],
+  "rules": {
+    "member-ordering": [
+      true,
+      {
+        "order": [
+          "static-field",
+          "instance-field",
+          "constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-instance-method",
+          "static-method"
+        ]
+      }
+    ],
+    "member-access": [
+      true,
+      "no-public"
+    ],
+    //最大一行符号数
+    "max-line-length": [
+      true,
+      150
+    ],
+    "quotemark": [
+      true,
+      "single"
+    ],
+    "interface-name": [
+      false,
+      "always-prefix"
+    ],
+    // "no-debugger": true,
+    "class-name": true,
+    "no-empty": true,
+    "semicolon": [
+      true,
+      "always",
+      "ignore-bound-class-methods",
+      "ignore-interfaces"
+    ],
+    "no-trailing-whitespace": [
+      true,
+      "ignore-jsdoc"
+    ], //不能两行以上空白，忽略jsdoc中的
+    "eofline": false, //以新行结束
+    "no-console": false,
+    "prefer-const": false,
+    "no-angle-bracket-type-assertion": false,
+    "only-arrow-functions": [
+      true,
+      "allow-declarations"
+    ],
+    "whitespace": [
+      false
+    ],
+    "ordered-imports": false,
+    "file-header": [
+      true,
+      "@author"
+    ],
+    "no-var-keyword": true, //不能使用var
+    "no-duplicate-imports": true, //不能重复import
+    "variable-name": [
+      true,
+      "ban-keywords"
+    ],
+    //    "no-default-export": true //不允许export default
+    "trailing-comma": [
+      true,
+      {
+        "multiline": "never",
+        "singleline": "never"
+      }
+    ],
+    "no-shadowed-variable": false
+  }
+}
