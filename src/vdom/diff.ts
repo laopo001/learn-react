@@ -17,7 +17,7 @@ export function diff(vnode: VNode, dom: HTMLElement, context, parent) {
     if (parent) parent.appendChild(ret);
 }
 
-function _diff(vnode: VNode | any, dom, context) {
+function _diff(vnode: any | VNode, dom, context) {
     debugger;
     let out = dom;
     if (vnode == null || typeof vnode === 'boolean') vnode = '';
@@ -36,8 +36,16 @@ function _diff(vnode: VNode | any, dom, context) {
         out[KEY] = true;
         return out;
     }
+
+    for (let i = 0; i < vnode.children.length; i++) {
+        out.appendChild(_diff(vnode.children[i], dom.childNodes[i], context));
+    }
     let vnodeName = vnode.name;
+    if (typeof vnodeName === 'string') {
+        out 
+    }
     if (typeof vnodeName === 'function') {
         return buildComponentFromVNode(vnode, dom, context);
     }
+    return out;
 }
