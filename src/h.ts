@@ -36,5 +36,5 @@ export function h(nodeName, attributes, ...stack) {
             lastSimple = simple;
         }
     }
-    return new VNode(nodeName, children, attributes);
+    return new VNode(nodeName, attributes, children);
 }

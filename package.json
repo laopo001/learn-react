@@ -5,13 +5,13 @@
   "main": "",
   "scripts": {
     "start": "npm run build",
+    "demo": "webpack --display-error-details --progress --colors --watch",
     "watch": "webpack --display-error-details --progress --colors --watch",
     "build": "webpack --display-error-details --progress --colors"
   },
   "author": "ldh",
   "license": "ISC",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "browser-sync": "^2.18.12",
     "browser-sync-webpack-plugin": "^1.2.0",

@@ -1,5 +1,11 @@
 /**
  * @author dadigua
  */
+import { h } from './h';
+import { Component } from './component';
+import { render } from './render';
 
- console.log(123);
+
+export default { h, createElement: h, Component, render };
+
+export { h, h as createElement, Component, render };

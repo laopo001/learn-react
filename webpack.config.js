@@ -5,7 +5,7 @@ module.exports = {
 
     //页面入口文件配置
     entry: {
-        index: './src/index.ts'
+        index: './demo/index'
     },
     //入口文件输出配置
     output: {
@@ -26,10 +26,10 @@ module.exports = {
     module: {
         //加载器配置
         loaders: [
-            { test: /\.ts$/, loader: 'ts-loader' },
+            { test: /\.tsx?$/, loader: 'ts-loader' },
         ]
     },
     resolve: {
-        extensions: ['.ts', '.js']
+        extensions: ['.ts', '.tsx', '.js']
     }
 };
