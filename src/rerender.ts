@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import { Component } from './component';
-import { renderComponent } from './vdom/compontentUtil';
+import { renderComponent } from './vdom/componentUtil';
 import { RenderMode } from './config/';
 
 let enqueue: Component[] = [];
