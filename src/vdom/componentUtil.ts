@@ -7,6 +7,18 @@ import { Component } from '../component';
 import { VNode } from '../vnode';
 import { diff } from './diff';
 
+export let DidMounts = [];
+
+let isDid = false;
+
+export function callDidMount(is) {
+    if (is) { isDid = is; } else { return; }
+
+    DidMounts.forEach(c => {
+        c.componentDidMount();
+    });
+    DidMounts = [];
+}
 
 export function renderComponent(component: Component, opts: RenderMode, context?) {
 
@@ -20,7 +32,8 @@ export function renderComponent(component: Component, opts: RenderMode, context?
     let dom = diff(vnode, component.__dom__, context);
     component.__dom__ = dom;
     if (component.__renderCount__ === 1) {
-        component.componentDidMount();
+        DidMounts.push(component);
+        // component.componentDidMount();
     }
     component.componentDidUpdate(component.props, component.state);
 
@@ -44,9 +57,9 @@ export function createComponent(Ctor, props, context) {
     return inst;
 }
 export function buildComponentFromVNode(vnode: VNode, dom, context) {
-    let component: Component = dom && dom._component;
+    let component: Component = vnode && vnode.component;
     if (component) {
-
+        return renderComponent(component, RenderMode.SYNC_RENDER, context);
     } else {
         component = createComponent(vnode.name, vnode.props, context);
         vnode.component = component;
@@ -57,5 +70,5 @@ export function buildComponentFromVNode(vnode: VNode, dom, context) {
 }
 
 export function unmountComponent(component) {
-
+    component.componentWillUnmount();
 }

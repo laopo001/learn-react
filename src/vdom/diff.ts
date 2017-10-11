@@ -2,9 +2,9 @@
  * @author dadigua
  */
 import { KEY, RenderMode } from '../config/';
-import { removeNode, setAccessor } from './dom';
+import { removeNode, setAttribute } from './dom';
 import { isNamedNode, createNode, isSameNodeType } from './util';
-import { buildComponentFromVNode, unmountComponent, renderComponent } from './componentUtil';
+import { buildComponentFromVNode, unmountComponent, renderComponent, callDidMount } from './componentUtil';
 import { VNode } from '../vnode';
 
 export const mounts = [];
@@ -13,8 +13,9 @@ let isSvgMode = false;
 let hydrating = false;
 
 export function create(vnode: VNode, context, parent) {
-    let ret = diff(vnode, parent, context);
-    // if (parent) parent.appendChild(ret);
+    let ret = diff(vnode, null, context);
+    if (parent) parent.appendChild(ret);
+    callDidMount(true);
 }
 
 export function diff(vnode: any | VNode, dom, context) {
@@ -24,23 +25,18 @@ export function diff(vnode: any | VNode, dom, context) {
         if (typeof vnode.name === 'string') {
             if (!dom || !vnode.isSameName(dom)) {
                 out = vnode.createDom();
+                if (dom) {
+                    recollectNodeTree(dom);
+                }
             }
-        }
-        if (typeof vnode.name === 'function') {
-
+            if (vnode.children.length > 0) {
+                diffChild(vnode.children, out.childNodes, context, out);
+            }
+            diffProps(vnode.props, out);
+            out.oldVNode = vnode;
+        } else if (typeof vnode.name === 'function') {
             out = buildComponentFromVNode(vnode, dom, context);
-
-        }
-        if (vnode.children.length > 0 && typeof vnode.name !== 'function') {
-            diffChild(vnode.children, out.childNodes, context, out);
-
-            // for (let i = 0; i < vnode.children.length; i++) {
-            //     if (out.childNodes[i] !== undefined) {
-            //         diff(vnode.children[i], out.childNodes[i], context);
-            //     } else {
-            //         out.appendChild(diff(vnode.children[i], out.childNodes[i], context));
-            //     }
-            // }
+            out.oldVNode = vnode;
         }
     } else {
         if (vnode == null || typeof vnode === 'boolean') vnode = '';
@@ -58,7 +54,6 @@ export function diff(vnode: any | VNode, dom, context) {
             out[KEY] = true;
         }
     }
-
     return out;
 }
 
@@ -83,8 +78,16 @@ function diffChild(vnodeChildren, domChildren, context, out) {
             }
         }
         let newChildDOM = diff(child, childDOM, context);
-        if (!childDOM) {
+        if (childDOM == null) {
             out.appendChild(newChildDOM);
+            if (child instanceof VNode && typeof child.name === 'function') {
+                callDidMount(false);
+            }
+        } else if (newChildDOM !== childDOM) {
+            if (!childDOM.markOut) {
+                out.insertBefore(newChildDOM, childDOM);
+                callDidMount(false);
+            }
         }
 
         // if (childDOM == null) {
@@ -97,4 +100,26 @@ function diffChild(vnodeChildren, domChildren, context, out) {
         // }
 
     }
+}
+
+function diffProps(props, out) {
+    let old = out.oldVNode !== undefined ? out.oldVNode.props : {};
+    for (let name in props) {
+        if (out && out[name] !== props[name]) {
+            // out[name] = props[name];
+            setAttribute(out, name, props[name], old[name]);
+        }
+        if (out.oldVNode && !(name in old)) {
+            out.removeAttribute(name);
+            // out[name] = '';
+        }
+    }
+}
+
+export function recollectNodeTree(dom) {
+    if (dom.oldVNode.component) {
+        unmountComponent(dom.oldVNode.component);
+    }
+    dom.markOut = true;
+    dom.parentNode.removeChild(dom);
 }

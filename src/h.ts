@@ -38,6 +38,11 @@ export function h(nodeName, props, ...children) {
         } */
 
     for (let i = 0; i < children.length; i++) {
+        if (children[i] == null) {
+            children.splice(i, 1);
+            i--;
+            continue;
+        }
         if (children[i].constructor === Array) {
             let temp = i;
             children[i].forEach((x, index) => {
@@ -46,6 +51,7 @@ export function h(nodeName, props, ...children) {
             });
             children.splice(temp, 1);
             i--;
+            continue;
         }
 
     }

@@ -7,21 +7,35 @@ import React, { Component, render } from '../src/index';
 
 class Root extends Component {
     state = {
-        name: 'root'
+        name: '',
+        id: 'qq',
+        c: <Book long='ppp'>children</Book>
     };
 
     componentDidMount() {
         console.log(this);
-        this.setState({ name: 'root++' });
     }
     render() {
-        return <div>{this.state.name}<Book>children</Book></div>;
+        return <div id='qq' style={{ background: '#eee' }}>
+            {this.state.name}
+            {this.state.c}
+            <button onClick={() => {
+                this.setState({ name: 'root++', c: undefined });
+            }}>update</button>
+
+        </div >;
     }
 }
 
 class Book extends Component {
+    componentDidMount() {
+        console.log(this);
+    }
+    componentWillUnmount() {
+        console.log('componentWillUnmount');
+    }
     render() {
-        return <div>Book<h3>{this.props.children}</h3></div>;
+        return <div>Book</div>;
     }
 }
-render(<div><Root></Root></div>, document.getElementById('root'));
+render(<Root></Root>, document.getElementById('root'));
