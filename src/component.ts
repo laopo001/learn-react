@@ -6,7 +6,7 @@ import { enqueueRender, forceRender } from './rerender';
 export class Component {
     __dom__;
     __vnode__;
-    __renderCount__ = 0;
+    __renderCount__: number = 0;
     state = {};
     private _renderCallbacks = [];
     private _dirty = true;
@@ -32,9 +32,8 @@ export class Component {
     componentWillUnmount() { }
     componentWillReceiveProps(nextProps) { }
     shouldComponentUpdate(nextProps, nextState) { }
-    render() { }
+    render() {
+
+    }
 }
 
-class Root extends Component {
-    render() { }
-}

@@ -21,7 +21,6 @@ export function create(vnode: VNode, context, parent) {
 export function diff(vnode: any | VNode, dom, context) {
     let out = dom;
     if (vnode instanceof VNode) {
-
         if (typeof vnode.name === 'string') {
             if (!dom || !vnode.isSameName(dom)) {
                 out = vnode.createDom();
@@ -36,7 +35,7 @@ export function diff(vnode: any | VNode, dom, context) {
             out.oldVNode = vnode;
         } else if (typeof vnode.name === 'function') {
             out = buildComponentFromVNode(vnode, dom, context);
-            out.oldVNode = vnode;
+            out.oldComponentVNode = vnode;
         }
     } else {
         if (vnode == null || typeof vnode === 'boolean') vnode = '';

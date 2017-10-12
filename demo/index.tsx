@@ -2,8 +2,8 @@
  * @author dadigua
  */
 
-import React, { Component, render } from '../src/index';
-
+import React, { Component, render } from 'treact';
+import * as Button from 'antd/lib/button';
 
 class Root extends Component {
     state = {
@@ -19,6 +19,7 @@ class Root extends Component {
         return <div id='qq' style={{ background: '#eee' }}>
             {this.state.name}
             {this.state.c}
+            <Button >123123</Button>
             <button onClick={() => {
                 this.setState({ name: 'root++', c: undefined });
             }}>update</button>
@@ -38,4 +39,4 @@ class Book extends Component {
         return <div>Book</div>;
     }
 }
-render(<Root></Root>, document.getElementById('root'));
+render(<Root />, document.getElementById('root'));

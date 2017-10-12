@@ -2,9 +2,10 @@
   "compileOnSave": true,
   "compilerOptions": {
     "target": "es5",
-    "module": "es2015",
+    "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
+    "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "jsx": "react",
@@ -17,7 +18,7 @@
       "./node_modules/@types",
       "./dist"
     ],
-    "outDir": "lib"
+    "outDir": "node_modules/treact/lib"
   },
   "files": [
     "./src/index.ts"

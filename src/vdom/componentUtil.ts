@@ -44,6 +44,7 @@ export function createComponent(Ctor, props, context) {
     // 类形式的组件
     if (Ctor.prototype && Ctor.prototype.render) {
         inst = new Ctor(props, context);
+        Object.assign(inst.props, Ctor.defaultProps);
         // Component.call(inst, props, context);
     } else {// 无状态组件
         inst = new Component(props, context);
