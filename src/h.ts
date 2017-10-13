@@ -38,7 +38,7 @@ export function h(nodeName, props, ...children) {
         } */
 
     for (let i = 0; i < children.length; i++) {
-        if (children[i] == null) {
+        if (children[i] == null || children[i] === '') {
             children.splice(i, 1);
             i--;
             continue;

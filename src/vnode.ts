@@ -3,7 +3,6 @@
  */
 
 export class VNode {
-    component;
     key;
     constructor(public name, public props, public children) {
         this.props = this.props == null ? {} : this.props;

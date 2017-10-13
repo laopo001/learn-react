@@ -5,7 +5,7 @@
 import { RenderMode } from '../config/';
 import { Component } from '../component';
 import { VNode } from '../vnode';
-import { diff } from './diff';
+import { diff, recollectNodeTree } from './diff';
 
 export let DidMounts = [];
 
@@ -31,6 +31,12 @@ export function renderComponent(component: Component, opts: RenderMode, context?
 
     let dom = diff(vnode, component.__dom__, context);
     component.__dom__ = dom;
+    if (dom.__components__ == null) {
+        dom.__components__ = [component];
+    } else {
+        dom.__components__.push(component);
+    }
+    // dom.__components__ = component;
     if (component.__renderCount__ === 1) {
         DidMounts.push(component);
         // component.componentDidMount();
@@ -49,7 +55,7 @@ export function createComponent(Ctor, props, context) {
     } else {// 无状态组件
         inst = new Component(props, context);
         inst.constructor = Ctor;
-        inst.render = inst.constructor(props, context);
+        inst.render = inst.constructor.bind(null, props, context);
     }
     if (inst.componentWillReceiveProps) {
         inst.componentWillReceiveProps(props, context);
@@ -58,12 +64,14 @@ export function createComponent(Ctor, props, context) {
     return inst;
 }
 export function buildComponentFromVNode(vnode: VNode, dom, context) {
-    let component: Component = vnode && vnode.component;
-    if (component) {
+    let component: Component = dom && dom.__components__.find((c) => { return c.constructor === vnode.name; });
+    if (component && component.constructor === vnode.name) {
         return renderComponent(component, RenderMode.SYNC_RENDER, context);
     } else {
+        if (dom) {
+            recollectNodeTree(dom);
+        }
         component = createComponent(vnode.name, vnode.props, context);
-        vnode.component = component;
         component.__vnode__ = vnode;
         component.props.children = vnode.children;
         return renderComponent(component, RenderMode.SYNC_RENDER, context);

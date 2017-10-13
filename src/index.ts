@@ -4,6 +4,7 @@
 import { h } from './h';
 import { Component } from './component';
 import { render } from './render';
+import { VNode } from './vnode';
 const ARR = [];
 
 let Children = {
@@ -33,8 +34,11 @@ let Children = {
     }
 };
 
-let react = { h, createElement: h, Component, render, Children };
 
-export default <any>react;
+const React = { h, createElement: h, Component, render, Children };
+
+export default React;
+
+
 
 export { h, h as createElement, Component, render, Children };

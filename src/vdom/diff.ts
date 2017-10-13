@@ -104,6 +104,7 @@ function diffChild(vnodeChildren, domChildren, context, out) {
 function diffProps(props, out) {
     let old = out.oldVNode !== undefined ? out.oldVNode.props : {};
     for (let name in props) {
+        if (name === 'children') continue;
         if (out && out[name] !== props[name]) {
             // out[name] = props[name];
             setAttribute(out, name, props[name], old[name]);
@@ -116,8 +117,8 @@ function diffProps(props, out) {
 }
 
 export function recollectNodeTree(dom) {
-    if (dom.oldVNode.component) {
-        unmountComponent(dom.oldVNode.component);
+    if (dom.__component__) {
+        unmountComponent(dom.__component__);
     }
     dom.markOut = true;
     dom.parentNode.removeChild(dom);
