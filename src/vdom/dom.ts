@@ -10,11 +10,16 @@ export function removeNode(node) {
 }
 
 
-export function setAttribute(dom, name, value, old) {
+export function setAttribute(dom, name, value, oldvalue) {
     if (name === 'className') name = 'class';
     if (name === 'key') { }
     else if (name === 'ref') {
-
+        if (typeof value === 'string') {
+            if (dom.component.refs === undefined) { dom.component.refs = {}; }
+            dom.component.refs[value] = dom;
+        } else if (typeof value === 'function') {
+            value(dom);
+        }
     } else if (name === 'class') {
         dom.className = value || '';
     } else if (name === 'style') {
@@ -22,8 +27,8 @@ export function setAttribute(dom, name, value, old) {
             dom.style.cssText = value || '';
         }
         if (value && typeof value === 'object') {
-            if (typeof old !== 'string') {
-                for (let i in old) if (!(i in value)) dom.style[i] = '';
+            if (typeof oldvalue !== 'string') {
+                for (let i in oldvalue) if (!(i in value)) dom.style[i] = '';
             }
             for (let i in value) {
                 dom.style[i] = typeof value[i] === 'number' && IS_NON_DIMENSIONAL.test(i) === false ? (value[i] + 'px') : value[i];
@@ -35,7 +40,7 @@ export function setAttribute(dom, name, value, old) {
         let useCapture = name !== (name = name.replace(/Capture$/, ''));
         name = name.toLowerCase().substring(2);
         if (value) {
-            if (!old) dom.addEventListener(name, eventProxy, useCapture);
+            if (!oldvalue) dom.addEventListener(name, eventProxy, useCapture);
         }
         else {
             dom.removeEventListener(name, eventProxy, useCapture);

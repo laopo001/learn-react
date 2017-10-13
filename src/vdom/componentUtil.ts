@@ -20,11 +20,12 @@ export function callDidMount(is) {
     DidMounts = [];
 }
 
-export function renderComponent(component: Component, opts: RenderMode, context?) {
+export function renderComponent(component: Component, opts: RenderMode, context, isCreate) {
 
     let vnode = component.render();
-    component.__renderCount__++;
-    if (component.__renderCount__ === 1) {
+    vnode.component = component;
+    // component.__renderCount__++;
+    if (isCreate) {
         component.componentWillMount();
     }
     component.componentWillUpdate(component.props, component.state);
@@ -37,7 +38,7 @@ export function renderComponent(component: Component, opts: RenderMode, context?
         dom.__components__.push(component);
     }
     // dom.__components__ = component;
-    if (component.__renderCount__ === 1) {
+    if (isCreate) {
         DidMounts.push(component);
         // component.componentDidMount();
     }
@@ -50,6 +51,10 @@ export function createComponent(Ctor, props, context) {
     // 类形式的组件
     if (Ctor.prototype && Ctor.prototype.render) {
         inst = new Ctor(props, context);
+        // Component.call(inst, props, context);
+        if (inst.context == null) inst.context = context;
+        inst.context = Object.assign({}, inst.context, inst.getChildContext());
+
         Object.assign(inst.props, Ctor.defaultProps);
         // Component.call(inst, props, context);
     } else {// 无状态组件
@@ -66,7 +71,7 @@ export function createComponent(Ctor, props, context) {
 export function buildComponentFromVNode(vnode: VNode, dom, context) {
     let component: Component = dom && dom.__components__.find((c) => { return c.constructor === vnode.name; });
     if (component && component.constructor === vnode.name) {
-        return renderComponent(component, RenderMode.SYNC_RENDER, context);
+        return renderComponent(component, RenderMode.SYNC_RENDER, context, false);
     } else {
         if (dom) {
             recollectNodeTree(dom);
@@ -74,7 +79,7 @@ export function buildComponentFromVNode(vnode: VNode, dom, context) {
         component = createComponent(vnode.name, vnode.props, context);
         component.__vnode__ = vnode;
         component.props.children = vnode.children;
-        return renderComponent(component, RenderMode.SYNC_RENDER, context);
+        return renderComponent(component, RenderMode.SYNC_RENDER, component.context, true);
     }
 }
 

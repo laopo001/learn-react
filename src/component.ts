@@ -3,6 +3,7 @@
  */
 import { enqueueRender, forceRender } from './rerender';
 
+
 export class Component {
     __dom__;
     __vnode__;
@@ -14,7 +15,9 @@ export class Component {
         return this._dirty;
     }
     constructor(public props, public context) {
-
+    }
+    getChildContext() {
+        return {};
     }
     setState(state, callback?) {
         Object.assign(this.state, state);
@@ -32,7 +35,7 @@ export class Component {
     componentWillUnmount() { }
     componentWillReceiveProps(nextProps) { }
     shouldComponentUpdate(nextProps, nextState) { }
-    render() {
+    render(): any {
 
     }
 }

@@ -24,6 +24,9 @@ export function diff(vnode: any | VNode, dom, context) {
         if (typeof vnode.name === 'string') {
             if (!dom || !vnode.isSameName(dom)) {
                 out = vnode.createDom();
+
+                out.component = (vnode as any).component;
+
                 if (dom) {
                     recollectNodeTree(dom);
                 }
@@ -35,7 +38,7 @@ export function diff(vnode: any | VNode, dom, context) {
             out.oldVNode = vnode;
         } else if (typeof vnode.name === 'function') {
             out = buildComponentFromVNode(vnode, dom, context);
-            out.oldComponentVNode = vnode;
+            // out.oldComponentVNode = vnode;
         }
     } else {
         if (vnode == null || typeof vnode === 'boolean') vnode = '';
@@ -69,6 +72,7 @@ function diffChild(vnodeChildren, domChildren, context, out) {
     }
     for (let i = 0; i < vnodeChildren.length; i++) {
         let child = vnodeChildren[i];
+        if (child instanceof VNode) (child as any).component = out.component;
         let childDOM = domChildren === undefined ? undefined : domChildren[i];
         if (child.key != null) {
             if (keyObj[child.key] !== undefined) {
@@ -117,8 +121,11 @@ function diffProps(props, out) {
 }
 
 export function recollectNodeTree(dom) {
-    if (dom.__component__) {
-        unmountComponent(dom.__component__);
+    if (dom.__components__) {
+        dom.__components__.forEach(component => {
+            unmountComponent(dom.component);
+        });
+        // unmountComponent(dom.__component__);
     }
     dom.markOut = true;
     dom.parentNode.removeChild(dom);

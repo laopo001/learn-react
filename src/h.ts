@@ -36,6 +36,13 @@ export function h(nodeName, props, ...children) {
                 lastSimple = simple;
             }
         } */
+    /*     if (props && 'ref' in props) {
+            const old = props['ref'];
+            props['ref'] = function (dom) {
+                this.refs[old] = dom;
+            };
+            // debugger;
+        } */
 
     for (let i = 0; i < children.length; i++) {
         if (children[i] == null || children[i] === '') {
@@ -57,4 +64,16 @@ export function h(nodeName, props, ...children) {
     }
 
     return new VNode(nodeName, props, children);
+}
+
+export function cloneElement(vnode, props) {
+    return h(
+        vnode.name,
+        Object.assign({}, vnode.props, props),
+        arguments.length > 2 ? [].slice.call(arguments, 2) : vnode.children
+    );
+}
+
+export function isValidElement(element) {
+    return element && ((element instanceof VNode));
 }

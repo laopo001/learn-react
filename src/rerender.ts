@@ -19,12 +19,12 @@ function rerender() {
     let component, list = enqueue;
     enqueue = [];
     while (component = list.pop()) {
-        renderComponent(component, RenderMode.ASYNC_RENDER);
+        renderComponent(component, RenderMode.ASYNC_RENDER, {}, false);
     }
 }
 
 
 export function forceRender(component) {
-    renderComponent(component, RenderMode.SYNC_RENDER);
+    renderComponent(component, RenderMode.SYNC_RENDER, {}, false);
 }
 

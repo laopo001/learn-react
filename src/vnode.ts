@@ -4,9 +4,11 @@
 
 export class VNode {
     key;
+    type;
     constructor(public name, public props, public children) {
         this.props = this.props == null ? {} : this.props;
         this.key = this.props.key;
+        this.type = name;
     }
     isSameName(dom) {
         return dom.normalizedNodeName === this.name || dom.nodeName.toLowerCase() === this.name.toLowerCase();
