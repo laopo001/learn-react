@@ -5,7 +5,7 @@ import { h, cloneElement, isValidElement } from './h';
 import { Component } from './component';
 // import { render } from './render';
 import { VNode } from './vnode';
-import { Children, findDOMNode, render } from './reactdom';
+import { Children, findDOMNode, render } from './react-dom';
 
 
 const React = { h, createElement: h, Component, render, Children, findDOMNode, cloneElement, isValidElement };

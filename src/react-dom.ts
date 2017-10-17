@@ -10,6 +10,7 @@ export function findDOMNode(component) {
 const ARR = [];
 export const Children = {
     map(children, fn, ctx) {
+        debugger;
         if (children == null) return null;
         children = Children.toArray(children);
         if (ctx && ctx !== children) fn = fn.bind(ctx);

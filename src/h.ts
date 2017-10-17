@@ -36,13 +36,14 @@ export function h(nodeName, props, ...children) {
                 lastSimple = simple;
             }
         } */
-    /*     if (props && 'ref' in props) {
-            const old = props['ref'];
-            props['ref'] = function (dom) {
-                this.refs[old] = dom;
-            };
-            // debugger;
-        } */
+    if (props && 'ref' in props && typeof props['ref'] === 'string') {
+        const old = props['ref'];
+        props['ref'] = function (dom) {
+            this.refs[old] = dom;
+        };
+        props['ref'].funcName = 'stringToFunction';
+        // debugger;
+    }
 
     for (let i = 0; i < children.length; i++) {
         if (children[i] == null || children[i] === '') {

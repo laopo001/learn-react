@@ -7,7 +7,10 @@ import * as Icon from 'antd/lib/icon';
 import * as Affix from 'antd/lib/affix';
 import * as Breadcrumb from 'antd/lib/breadcrumb';
 import * as Menu from 'antd/lib/menu';
-
+import * as Dropdown from 'antd/lib/dropdown';
+// import * as Pagination from 'antd/lib/pagination';
+import * as Select from 'antd/lib/select';
+const Option = Select.Option;
 
 // import { Button } from 'antd';
 
@@ -42,8 +45,8 @@ function BreadcrumbDemo(props) {
         <Breadcrumb.Item>An Application</Breadcrumb.Item>
     </Breadcrumb>
 }
-function MenuDemo(props) {
-    return <Menu>
+function DropdownDemo(props) {
+    let menu = <Menu>
         <Menu.Item>
             <a target="_blank" rel="noopener noreferrer" href="http://www.alipay.com/">1st menu item</a>
         </Menu.Item>
@@ -54,8 +57,32 @@ function MenuDemo(props) {
             <a target="_blank" rel="noopener noreferrer" href="http://www.tmall.com/">3d menu item</a>
         </Menu.Item>
     </Menu>
+    return <Dropdown overlay={menu}>
+        <a className="ant-dropdown-link" href="#">
+            Hover me <Icon type="down" />
+        </a>
+    </Dropdown>
+}
+function PaginationDemo(props) {
+    return <Pagination defaultCurrent={1} total={50} />
 }
 
+function SelectDemo(props) {
+    function handleChange(value) {
+        console.log(`selected ${value}`);
+    }
+    return <div>
+        <Select defaultValue="lucy" style={{ width: 120 }} onChange={handleChange}>
+            <Option value="jack">Jack</Option>
+            <Option value="lucy">Lucy</Option>
+            <Option value="disabled" disabled>Disabled</Option>
+            <Option value="Yiminghe">yiminghe</Option>
+        </Select>
+        <Select defaultValue="lucy" style={{ width: 120 }} allowClear disabled>
+            <Option value="lucy">Lucy</Option>
+        </Select>
+    </div>
+}
 
 
 
@@ -73,16 +100,20 @@ class Root extends Component {
     }
     render() {
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
+            {/* <Book>book</Book> */}
             {/* {this.state.name} <br /> */}
 
-            <ButtonDemo />
-            <IconDemo />
-            <AffixDemo />
-            <BreadcrumbDemo />
-            <MenuDemo />
-            <button onClick={() => {
+            {/* {<ButtonDemo />}  */}
+            {/*  <IconDemo /> */}
+            {/* <AffixDemo /> */}
+            {/* <BreadcrumbDemo /> */}
+            {/* {<DropdownDemo />} */}
+            {/* <PaginationDemo /> */}
+            <SelectDemo />
+
+            {/* <button onClick={() => {
                 this.setState({ name: 'root++', c: undefined });
-            }}>update</button>
+            }}>update</button> */}
 
         </div >;
     }
@@ -96,7 +127,7 @@ class Book extends Component<any, any> {
         console.log('componentWillUnmount');
     }
     render() {
-        return <div>Book</div>;
+        return <div>{this.props.children}</div>;
     }
 }
 

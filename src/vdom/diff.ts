@@ -40,6 +40,8 @@ export function diff(vnode: any | VNode, dom, context) {
             out = buildComponentFromVNode(vnode, dom, context);
             // out.oldComponentVNode = vnode;
         }
+
+
     } else {
         if (vnode == null || typeof vnode === 'boolean') vnode = '';
         if (typeof vnode === 'string' || typeof vnode === 'number') {
@@ -123,7 +125,7 @@ function diffProps(props, out) {
 export function recollectNodeTree(dom) {
     if (dom.__components__) {
         dom.__components__.forEach(component => {
-            unmountComponent(dom.component);
+            unmountComponent(component);
         });
         // unmountComponent(dom.__component__);
     }

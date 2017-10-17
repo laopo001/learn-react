@@ -15,7 +15,7 @@ export function setAttribute(dom, name, value, oldvalue) {
     if (name === 'key') { }
     else if (name === 'ref') {
         if (typeof value === 'string') {
-            if (dom.component.refs === undefined) { dom.component.refs = {}; }
+            if (dom.component.refs === undefined || !Object.isExtensible(dom.component.refs)) { dom.component.refs = {}; }
             dom.component.refs[value] = dom;
         } else if (typeof value === 'function') {
             value(dom);
@@ -50,6 +50,8 @@ export function setAttribute(dom, name, value, oldvalue) {
 
         dom[name] = value || '';
         if (value == null || value === false) dom.removeAttribute(name);
+    } else {
+        dom.setAttribute(name, value);
     }
 }
 

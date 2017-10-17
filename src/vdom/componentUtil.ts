@@ -20,9 +20,35 @@ export function callDidMount(is) {
     DidMounts = [];
 }
 
+function run(vnode, component) {
+    if (vnode instanceof VNode) {
+        if ('ref' in vnode.props) {
+            if (vnode.props.ref.funcName === 'stringToFunction') {
+                vnode.props.ref = vnode.props.ref.bind(component);
+            }
+        }
+        vnode.children.forEach((x) => {
+            run(x, component);
+        });
+    }
+}
+
 export function renderComponent(component: Component, opts: RenderMode, context, isCreate) {
 
     let vnode = component.render();
+
+    // 未知
+    // if (vnode == null) {
+    //     return;
+    // }
+    if (vnode.children.length === 0 && vnode.props.children) {
+        if (vnode.props.children.constructor === Array) {
+            vnode.children = vnode.props.children;
+        } else {
+            vnode.children = [vnode.props.children];
+        }
+    }
+    run(vnode, component);
     vnode.component = component;
     // component.__renderCount__++;
     if (isCreate) {
@@ -50,12 +76,15 @@ export function createComponent(Ctor, props, context) {
     let inst;
     // 类形式的组件
     if (Ctor.prototype && Ctor.prototype.render) {
-        inst = new Ctor(props, context);
+        let t_props = Object.assign({}, Ctor.defaultProps, props);
+        inst = new Ctor(t_props, context);
         // Component.call(inst, props, context);
         if (inst.context == null) inst.context = context;
         inst.context = Object.assign({}, inst.context, inst.getChildContext());
+        // inst.state = Object.assign({}, inst.state, inst.get());
 
-        Object.assign(inst.props, Ctor.defaultProps);
+        // inst.props = Object.assign({}, Ctor.defaultProps, inst.props);
+
         // Component.call(inst, props, context);
     } else {// 无状态组件
         inst = new Component(props, context);
@@ -78,7 +107,15 @@ export function buildComponentFromVNode(vnode: VNode, dom, context) {
         }
         component = createComponent(vnode.name, vnode.props, context);
         component.__vnode__ = vnode;
-        component.props.children = vnode.children;
+        // 如果组件传入props.children，则vnode下面去掉
+        if (component.props.children === undefined) {
+            switch (vnode.children.length) {
+                case 0: component.props.children = undefined; break;
+                case 1: component.props.children = vnode.children[0]; break;
+                default: component.props.children = vnode.children; break;
+            }
+        }
+        // component.props.children = vnode.children;
         return renderComponent(component, RenderMode.SYNC_RENDER, component.context, true);
     }
 }

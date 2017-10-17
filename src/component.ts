@@ -9,6 +9,7 @@ export class Component {
     __vnode__;
     __renderCount__: number = 0;
     state = {};
+    refs = {};
     private _renderCallbacks = [];
     private _dirty = true;
     get dirty() {
