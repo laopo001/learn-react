@@ -37,12 +37,12 @@ export function h(nodeName, props, ...children) {
             }
         } */
     if (props && 'ref' in props && typeof props['ref'] === 'string') {
+        // ref string 转 function方式
         const old = props['ref'];
-        props['ref'] = function (dom) {
-            this.refs[old] = dom;
+        props['ref'] = function (x) {
+            this.refs[old] = x;
         };
-        props['ref'].funcName = 'stringToFunction';
-        // debugger;
+        props['ref'].funcName = '__ref_string__';
     }
 
     for (let i = 0; i < children.length; i++) {

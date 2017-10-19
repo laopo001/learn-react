@@ -16,6 +16,7 @@ export function create(vnode: VNode, context, parent) {
     let ret = diff(vnode, null, context);
     if (parent) parent.appendChild(ret);
     callDidMount(true);
+    return ret;
 }
 
 export function diff(vnode: any | VNode, dom, context) {
@@ -25,7 +26,7 @@ export function diff(vnode: any | VNode, dom, context) {
             if (!dom || !vnode.isSameName(dom)) {
                 out = vnode.createDom();
 
-                out.component = (vnode as any).component;
+                // out.component = (vnode as any).component;
 
                 if (dom) {
                     recollectNodeTree(dom);
@@ -74,7 +75,8 @@ function diffChild(vnodeChildren, domChildren, context, out) {
     }
     for (let i = 0; i < vnodeChildren.length; i++) {
         let child = vnodeChildren[i];
-        if (child instanceof VNode) (child as any).component = out.component;
+        // if (child instanceof VNode) (child as any).component = out.component;
+
         let childDOM = domChildren === undefined ? undefined : domChildren[i];
         if (child.key != null) {
             if (keyObj[child.key] !== undefined) {
@@ -108,14 +110,14 @@ function diffChild(vnodeChildren, domChildren, context, out) {
 }
 
 function diffProps(props, out) {
-    let old = out.oldVNode !== undefined ? out.oldVNode.props : {};
+    let oldProps = out.oldVNode !== undefined ? out.oldVNode.props : {};
     for (let name in props) {
         if (name === 'children') continue;
         if (out && out[name] !== props[name]) {
             // out[name] = props[name];
-            setAttribute(out, name, props[name], old[name]);
+            setAttribute(out, name, props[name], oldProps[name]);
         }
-        if (out.oldVNode && !(name in old)) {
+        if (out.oldVNode && !(name in oldProps)) {
             out.removeAttribute(name);
             // out[name] = '';
         }

@@ -14,10 +14,11 @@ export function setAttribute(dom, name, value, oldvalue) {
     if (name === 'className') name = 'class';
     if (name === 'key') { }
     else if (name === 'ref') {
-        if (typeof value === 'string') {
-            if (dom.component.refs === undefined || !Object.isExtensible(dom.component.refs)) { dom.component.refs = {}; }
-            dom.component.refs[value] = dom;
-        } else if (typeof value === 'function') {
+        // if (typeof value === 'string') {
+        //     if (dom.component.refs === undefined || !Object.isExtensible(dom.component.refs)) { dom.component.refs = {}; }
+        //     dom.component.refs[value] = dom;
+        // } else
+         if (typeof value === 'function') {
             value(dom);
         }
     } else if (name === 'class') {

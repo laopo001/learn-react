@@ -11,6 +11,8 @@ import * as Dropdown from 'antd/lib/dropdown';
 // import * as Pagination from 'antd/lib/pagination';
 import * as Select from 'antd/lib/select';
 const Option = Select.Option;
+import * as Tooltip from 'antd/lib/tooltip';
+
 
 // import { Button } from 'antd';
 
@@ -84,7 +86,11 @@ function SelectDemo(props) {
     </div>
 }
 
-
+function TooltipDemo() {
+    return <Tooltip title="prompt text">
+        <span>Tooltip will show when mouse enter.</span>
+    </Tooltip>
+}
 
 
 
@@ -94,23 +100,25 @@ class Root extends Component {
         id: 'qq',
         c: <Book long='ppp'>children</Book>
     };
-
+    getChildContext() {
+        return { name: 'context+++' };
+    }
     componentDidMount() {
-        console.log(this);
+        console.log(this.refs.book);
     }
     render() {
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
-            {/* <Book>book</Book> */}
+            <br />
+            {/* <Book ><h6 ref='book'>book</h6></Book> */}
             {/* {this.state.name} <br /> */}
 
-            {/* {<ButtonDemo />}  */}
-            {/*  <IconDemo /> */}
-            {/* <AffixDemo /> */}
-            {/* <BreadcrumbDemo /> */}
-            {/* {<DropdownDemo />} */}
+            {/*             {<ButtonDemo />}
+            {<IconDemo />}
+            {<AffixDemo />}
+            {<BreadcrumbDemo />} */}
+            {/* { <DropdownDemo /> } */}
             {/* <PaginationDemo /> */}
-            <SelectDemo />
-
+            {<TooltipDemo />}
             {/* <button onClick={() => {
                 this.setState({ name: 'root++', c: undefined });
             }}>update</button> */}
@@ -121,13 +129,13 @@ class Root extends Component {
 
 class Book extends Component<any, any> {
     componentDidMount() {
-        console.log(this);
+        console.log(this.refs.dom);
     }
     componentWillUnmount() {
         console.log('componentWillUnmount');
     }
     render() {
-        return <div>{this.props.children}</div>;
+        return <div ref='dom'>{this.props.children}-{this.context.name}</div>;
     }
 }
 

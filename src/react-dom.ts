@@ -2,6 +2,10 @@
  * @author dadigua
  */
 import { create } from './vdom/diff';
+import { h } from './h';
+import { Component } from './component';
+import { renderComponent } from './vdom/componentUtil';
+import { RenderMode } from './config/';
 
 export function findDOMNode(component) {
     return component.__dom__;
@@ -10,7 +14,6 @@ export function findDOMNode(component) {
 const ARR = [];
 export const Children = {
     map(children, fn, ctx) {
-        debugger;
         if (children == null) return null;
         children = Children.toArray(children);
         if (ctx && ctx !== children) fn = fn.bind(ctx);
@@ -38,6 +41,28 @@ export const Children = {
 
 
 export function render(vnode, parent) {
+    let dom = create(vnode, {}, parent);
+    return dom.__components__[0];
+}
 
-    return create(vnode, {}, parent);
+
+class ContextProvider extends Component {
+    getChildContext() {
+        return this.props.context;
+    }
+    render() {
+        return this.props.children;
+    }
+}
+
+export function renderSubtreeIntoContainer(parentComponent, vnode, container, callback) {
+    let wrap = h(ContextProvider, { context: parentComponent.context }, vnode);
+    // let componentDOM = renderComponent(wrap, RenderMode.ASYNC_RENDER, parentComponent.context, true);
+    // container.appendChild(componentDOM);
+    let componentDOM = create(wrap, {}, container);
+    // let renderContainer = render(wrap, container);
+    // let component = renderContainer._component || renderContainer.base;
+    let component = componentDOM.__components__[0];
+    if (callback) callback.call(component, componentDOM);
+    return component;
 }

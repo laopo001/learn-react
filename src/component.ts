@@ -7,7 +7,6 @@ import { enqueueRender, forceRender } from './rerender';
 export class Component {
     __dom__;
     __vnode__;
-    __renderCount__: number = 0;
     state = {};
     refs = {};
     private _renderCallbacks = [];
