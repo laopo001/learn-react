@@ -55,10 +55,8 @@ export function h(nodeName, props, ...children) {
             let temp = i;
             children[i].forEach((x, index) => {
                 children.splice(i + index + 1, 0, x);
-                i++;
             });
             children.splice(temp, 1);
-            i--;
             continue;
         }
 

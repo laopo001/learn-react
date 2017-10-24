@@ -46,9 +46,9 @@ export function renderComponent(component: Component, opts: RenderMode, context,
         component.context = newObj.context;
 
     }
-    let vnode = component.render();
+    let vnode = component.render(component.props, component.context);
     if (vnode == null) {
-        console.warn('render return void');
+        // console.warn('render return void');
         return vnode;
     }
     vnode.childrenRef_bind(component);
@@ -88,7 +88,7 @@ export function createComponent(Ctor, props, context) {
         }
         inst = new C(props, context);
         inst.constructor = Ctor;
-        inst.render = inst.constructor.bind(null, props, context);
+        inst.render = inst.constructor;
     }
     return inst;
 }

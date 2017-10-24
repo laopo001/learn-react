@@ -37,6 +37,6 @@ export abstract class Component {
     componentWillUnmount() { }
     componentWillReceiveProps(nextProps, nextContext) { }
     shouldComponentUpdate(nextProps, nextState, nextContext): boolean { return true; }
-    abstract render();
+    abstract render(props, context);
 }
 
