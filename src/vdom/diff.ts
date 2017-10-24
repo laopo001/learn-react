@@ -52,9 +52,9 @@ export function diff(vnode: any | VNode, dom, context) {
                 }
             } else {
                 out = document.createTextNode(vnode as string);
-                // if (dom) {
-                //     if (dom.parentNode) dom.replaceChild(out, dom);
-                // }
+                if (dom) {
+                    if (dom.parentNode) dom.replaceChild(out, dom);
+                }
             }
             out[KEY] = true;
         }
@@ -73,11 +73,12 @@ function diffChild(vnodeChildren, domChildren, context, out) {
             keyObjLen++;
         }
     }
+    let j = 0;
     for (let i = 0; i < vnodeChildren.length; i++) {
         let child = vnodeChildren[i];
         // if (child instanceof VNode) (child as any).component = out.component;
+        let childDOM = domChildren === undefined ? undefined : domChildren[j];
 
-        let childDOM = domChildren === undefined ? undefined : domChildren[i];
         if (child.key != null) {
             if (keyObj[child.key] !== undefined) {
                 childDOM = keyObj[child.key];
@@ -85,6 +86,11 @@ function diffChild(vnodeChildren, domChildren, context, out) {
             }
         }
         let newChildDOM = diff(child, childDOM, context);
+        if (newChildDOM == null) {
+            j++;
+            continue;
+        }
+
         if (childDOM == null) {
             out.appendChild(newChildDOM);
             if (child instanceof VNode && typeof child.name === 'function') {
@@ -96,16 +102,7 @@ function diffChild(vnodeChildren, domChildren, context, out) {
                 callDidMount(false);
             }
         }
-
-        // if (childDOM == null) {
-        //     domChildren.appendChild(newChildDOM);
-        // } else if (newChildDOM === childDOM.nextSibling) {
-        //     let parentNode = childDOM.parentNode;
-        //     if (parentNode) parentNode.removeChild(childDOM);
-        // } else {
-        //     domChildren.insertBefore(newChildDOM, childDOM);
-        // }
-
+        j++;
     }
 }
 

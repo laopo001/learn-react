@@ -6,6 +6,7 @@ import { RenderMode } from '../config/';
 import { Component } from '../component';
 import { VNode } from '../vnode';
 import { diff, recollectNodeTree } from './diff';
+import { propsClone } from './util';
 
 export let DidMounts = [];
 
@@ -19,39 +20,38 @@ export function callDidMount(is) {
     DidMounts = [];
 }
 
-function run(vnode, component) {
-    if (vnode instanceof VNode) {
-        if ('ref' in vnode.props) {
-            vnode.props.ref = vnode.props.ref.bind(component);
-        }
-        vnode.children.forEach((x) => {
-            run(x, component);
-        });
-    }
+function setState(state, callback?) {
+    this.__new__.state = Object.assign({}, this.state, state);
+    if (callback) this._renderCallbacks.push(callback);
 }
 
 export function renderComponent(component: Component, opts: RenderMode, context, isCreate) {
-
-    let vnode = component.render();
-    if (vnode == null) { console.warn('vnode == null'); return document.createElement('div'); }
-    // 在没有children情况下，vnode.props直接传入children生效。
-    // if (vnode.children.length === 0 && vnode.props.children) {
-    //     if (vnode.props.children.constructor === Array) {
-    //         vnode.children = vnode.props.children;
-    //     } else {
-    //         vnode.children = [vnode.props.children];
-    //     }
-    // }
-    vnode.childrenRef_bind(component);
-    // run(vnode, component);
-    // vnode.component = component;
+    let old = { state: component.state, props: component.props, context: component.context };
+    let newObj = {
+        state: component.__new__.state === undefined ? component.state : component.__new__.state,
+        props: component.__new__.props === undefined ? component.props : component.__new__.props,
+        context: component.__new__.context === undefined ? component.context : component.__new__.context,
+    };
     if (isCreate) {
-        component.componentWillMount();
+        let innerComponent = Object.assign({ setState }, component);
+        innerComponent['__proto__'] = component['__proto__'];
+        component.componentWillMount.call(innerComponent);
     } else {
-        component.componentWillUpdate(component.props, component.state);
-    }
-    
+        if (opts === RenderMode.ASYNC_RENDER && !component.shouldComponentUpdate(newObj.props, newObj.state, newObj.context)) { return component.__dom__; }
 
+        component.componentWillUpdate(newObj.props, newObj.state, newObj.context);
+
+        component.state = newObj.state;
+        component.props = newObj.props;
+        component.context = newObj.context;
+
+    }
+    let vnode = component.render();
+    if (vnode == null) {
+        console.warn('render return void');
+        return vnode;
+    }
+    vnode.childrenRef_bind(component);
     let dom = diff(vnode, component.__dom__, context);
     component.__dom__ = dom;
     if (dom.__components__ == null) {
@@ -61,11 +61,10 @@ export function renderComponent(component: Component, opts: RenderMode, context,
             dom.__components__.push(component);
         }
     }
-
     if (isCreate) {
         DidMounts.push(component);
     } else {
-        component.componentDidUpdate(component.props, component.state);
+        component.componentDidUpdate(old.props, old.state, old.context);
     }
     return dom;
 }
@@ -73,56 +72,51 @@ export function createComponent(Ctor, props, context) {
     let inst;
     // 类形式的组件
     if (Ctor.prototype && Ctor.prototype.render) {
-        let t_props = Object.assign({}, Ctor.defaultProps, props);
+        // if (Ctor.prototype.getDefaultProps) {
+        //     Ctor.defaultProps = Ctor.prototype.getDefaultProps();
+        // }
+        let t_props = propsClone({}, Ctor.defaultProps, props);
         inst = new Ctor(t_props, context);
         if (inst.context == null) inst.context = context;
         inst.context = Object.assign({}, inst.context, inst.getChildContext());
+        if (inst.__new__ === undefined) { inst.__new__ = {}; }
 
-
-        inst.componentWillReceiveProps(t_props);
-        // inst.state = Object.assign({}, inst.state, inst.get());
-        // inst.props = Object.assign({}, Ctor.defaultProps, inst.props);
-        // Component.call(inst, props, context);
     } else {
         // 无状态组件
-        inst = new Component(props, context);
+        class C extends Component {
+            render() { }
+        }
+        inst = new C(props, context);
         inst.constructor = Ctor;
         inst.render = inst.constructor.bind(null, props, context);
     }
-    // inst.componentWillReceiveProps(props);
-    // if (inst.componentWillReceiveProps) {
-
-    // }
-
     return inst;
 }
 export function buildComponentFromVNode(vnode: VNode, dom, context) {
     let component: Component = dom && dom.__components__.find((c) => { return c.constructor === vnode.name; });
     if (component && component.constructor === vnode.name) {
-        Object.assign(component.props, vnode.props);
-        component.componentWillReceiveProps(component.props);
-        Object.assign(component.context, context);
-        return renderComponent(component, RenderMode.SYNC_RENDER, context, false);
+
+        component.__new__.props = propsClone(component.props, vnode.name.defaultProps, vnode.props, true);
+        component.__new__.context = Object.assign({}, component.context, context);
+        let innerComponent = Object.assign({ setState }, component);
+        innerComponent['__proto__'] = component['__proto__'];
+        component.componentWillReceiveProps.call(innerComponent, component.__new__.props, component.__new__.context);
+        if (vnode.props.ref) {
+            vnode.props.ref(component);
+        }
+        return renderComponent(component, RenderMode.ASYNC_RENDER, context, false);
     } else {
         if (dom) {
             recollectNodeTree(dom);
         }
         component = createComponent(vnode.name, vnode.props, context);
         // 如果 props绑定ref
-        if ('ref' in vnode.props) {
+        if (vnode.props.ref) {
             vnode.props.ref(component);
         }
 
         component.__vnode__ = vnode;
-        // 如果组件传入props.children，则vnode下面去掉
-        // if (component.props.children === undefined) {
-        //     switch (vnode.children.length) {
-        //         case 0: component.props.children = undefined; break;
-        //         case 1: component.props.children = vnode.children[0]; break;
-        //         default: component.props.children = vnode.children; break;
-        //     }
-        // }
-        return renderComponent(component, RenderMode.SYNC_RENDER, component.context, true);
+        return renderComponent(component, RenderMode.ASYNC_RENDER, component.context, true);
     }
 }
 

@@ -4,7 +4,7 @@
 import { create } from './vdom/diff';
 import { h } from './h';
 import { Component } from './component';
-import { renderComponent } from './vdom/componentUtil';
+import { renderComponent, buildComponentFromVNode } from './vdom/componentUtil';
 import { RenderMode } from './config/';
 
 export function findDOMNode(component) {
@@ -17,7 +17,9 @@ export const Children = {
         if (children == null) return null;
         children = Children.toArray(children);
         if (ctx && ctx !== children) fn = fn.bind(ctx);
-        return children.map(fn);
+        return children.map((a, b, c) => {
+            return fn(a, b);
+        });
     },
     forEach(children, fn, ctx) {
         if (children == null) return null;
@@ -57,12 +59,14 @@ class ContextProvider extends Component {
 
 export function renderSubtreeIntoContainer(parentComponent, vnode, container, callback) {
     let wrap = h(ContextProvider, { context: parentComponent.context }, vnode);
-    // let componentDOM = renderComponent(wrap, RenderMode.ASYNC_RENDER, parentComponent.context, true);
-    // container.appendChild(componentDOM);
-    let componentDOM = create(wrap, {}, container);
-    // let renderContainer = render(wrap, container);
-    // let component = renderContainer._component || renderContainer.base;
-    let component = componentDOM.__components__[0];
+    let componentDOM;
+    if (container.appended == null) {
+        componentDOM = create(wrap, {}, container);
+        container.appended = componentDOM;
+    } else {
+        componentDOM = buildComponentFromVNode(wrap, container.appended, {});
+    }
+    let component = componentDOM && componentDOM.__components__.find(function (c) { return c.constructor === vnode.name; });
     if (callback) callback.call(component, componentDOM);
     return component;
 }

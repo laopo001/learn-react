@@ -4,23 +4,25 @@
 import { enqueueRender, forceRender } from './rerender';
 
 
-export class Component {
+export abstract class Component {
     __dom__;
     __vnode__;
+    __new__: any = {};
+    __old__: any = {};
     state = {};
     refs = {};
     private _renderCallbacks = [];
-    private _dirty = true;
-    get dirty() {
-        return this._dirty;
-    }
+    // private _dirty = true;
+    // get dirty() {
+    //     return this._dirty;
+    // }
     constructor(public props, public context) {
     }
     getChildContext() {
         return {};
     }
     setState(state, callback?) {
-        Object.assign(this.state, state);
+        this.__new__.state = Object.assign({}, this.state, state);
         if (callback) this._renderCallbacks.push(callback);
         enqueueRender(this);
     }
@@ -30,13 +32,11 @@ export class Component {
     }
     componentWillMount() { }
     componentDidMount() { }
-    componentWillUpdate(nextProps, nextState) { }
-    componentDidUpdate(prevProps, prevState) { }
+    componentWillUpdate(nextProps, nextState, nextContext) { }
+    componentDidUpdate(prevProps, prevState, prevContext) { }
     componentWillUnmount() { }
-    componentWillReceiveProps(nextProps) { }
-    shouldComponentUpdate(nextProps, nextState) { }
-    render(): any {
-
-    }
+    componentWillReceiveProps(nextProps, nextContext) { }
+    shouldComponentUpdate(nextProps, nextState, nextContext): boolean { return true; }
+    abstract render();
 }
 

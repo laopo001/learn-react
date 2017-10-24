@@ -10,7 +10,7 @@ let enqueue: Component[] = [];
 export const defer = typeof Promise === 'function' ? Promise.resolve().then.bind(Promise.resolve()) : setTimeout;
 
 export function enqueueRender(component: Component) {
-    if (component.dirty && enqueue.push(component) === 1) {
+    if (enqueue.push(component) === 1) {
         defer(rerender);
     }
 }

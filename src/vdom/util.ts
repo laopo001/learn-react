@@ -34,4 +34,22 @@ export function isSameNodeType(node, vnode, hydrating) {
     return hydrating || node._componentConstructor === vnode.nodeName;
 }
 
+export function propsClone(target, defaultProps, source, out = false): Object {
+    const res = {};
+    if (out === true) {
+        for (let key in target) {
+            res[key] = target[key];
+        }
+        target = res;
+    }
+    for (let key in defaultProps) {
+        target[key] = defaultProps[key];
+    }
+    for (let key in source) {
+        if (source[key] != null) {
+            target[key] = source[key];
+        }
+    }
+    return target;
+}
 

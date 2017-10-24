@@ -8,7 +8,7 @@ import * as Affix from 'antd/lib/affix';
 import * as Breadcrumb from 'antd/lib/breadcrumb';
 import * as Menu from 'antd/lib/menu';
 import * as Dropdown from 'antd/lib/dropdown';
-// import * as Pagination from 'antd/lib/pagination';
+import * as Pagination from 'antd/lib/pagination';
 import * as Select from 'antd/lib/select';
 const Option = Select.Option;
 import * as Tooltip from 'antd/lib/tooltip';
@@ -80,9 +80,6 @@ function SelectDemo(props) {
             <Option value="disabled" disabled>Disabled</Option>
             <Option value="Yiminghe">yiminghe</Option>
         </Select>
-        <Select defaultValue="lucy" style={{ width: 120 }} allowClear disabled>
-            <Option value="lucy">Lucy</Option>
-        </Select>
     </div>
 }
 
@@ -109,16 +106,17 @@ class Root extends Component {
     render() {
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
             <br />
-            {/* <Book ><h6 ref='book'>book</h6></Book> */}
+            {/* <Book ><h6 ref='book' onClick={() => { console.log(123); }}>book</h6></Book> */}
             {/* {this.state.name} <br /> */}
 
             {/*             {<ButtonDemo />}
             {<IconDemo />}
             {<AffixDemo />}
             {<BreadcrumbDemo />} */}
-            {/* { <DropdownDemo /> } */}
-            {/* <PaginationDemo /> */}
-            {<TooltipDemo />}
+            {/* <DropdownDemo /> */}
+           {/*  <SelectDemo /> */}
+             <PaginationDemo />
+            {/* <TooltipDemo /> */}
             {/* <button onClick={() => {
                 this.setState({ name: 'root++', c: undefined });
             }}>update</button> */}
@@ -135,7 +133,14 @@ class Book extends Component<any, any> {
         console.log('componentWillUnmount');
     }
     render() {
-        return <div ref='dom'>{this.props.children}-{this.context.name}</div>;
+        return <div ref='dom'>
+            {
+                React.cloneElement(this.props.children, { onClick: () => { console.log(999); } })
+            }{
+                this.props.children
+            }{
+                this.props.children
+            }</div>;
     }
 }
 

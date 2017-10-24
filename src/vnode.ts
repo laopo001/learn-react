@@ -28,6 +28,9 @@ export class VNode {
             return [this.props.children];
         }
     }
+    get ref() {
+        return this.props.ref;
+    }
     isSameName(dom) {
         return dom.normalizedNodeName === this.name || dom.nodeName.toLowerCase() === this.name.toLowerCase();
     }
@@ -39,9 +42,13 @@ export class VNode {
     childrenRef_bind(component) {
         function run(vnode, component) {
             if (vnode instanceof VNode) {
-                if ('ref' in vnode.props && vnode.props.ref.funcName === '__ref_string__') {
-                    // this只有第一次bind生效；
-                    vnode.props.ref = vnode.props.ref.bind(component);
+                try {
+                    if (vnode.props.ref && vnode.props.ref.funcName === '__ref_string__') {
+                        // this只有第一次bind生效；
+                        vnode.props.ref = vnode.props.ref.bind(component);
+                    }
+                } catch (e) {
+                    debugger;
                 }
                 vnode.children.forEach((x) => {
                     run(x, component);
