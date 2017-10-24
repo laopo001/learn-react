@@ -2,19 +2,20 @@
  * @author dadigua
  */
 import React, { Component, render } from 'react';
-import * as Button from 'antd/lib/button';
-import * as Icon from 'antd/lib/icon';
-import * as Affix from 'antd/lib/affix';
-import * as Breadcrumb from 'antd/lib/breadcrumb';
-import * as Menu from 'antd/lib/menu';
-import * as Dropdown from 'antd/lib/dropdown';
-import * as Pagination from 'antd/lib/pagination';
-import * as Select from 'antd/lib/select';
+// import * as Button from 'antd/lib/button';
+// import * as Icon from 'antd/lib/icon';
+// import * as Affix from 'antd/lib/affix';
+// import * as Breadcrumb from 'antd/lib/breadcrumb';
+// import * as Menu from 'antd/lib/menu';
+// import * as Dropdown from 'antd/lib/dropdown';
+// import * as Pagination from 'antd/lib/pagination';
+// import * as Select from 'antd/lib/select';
+// const Option = Select.Option;
+// import * as Tooltip from 'antd/lib/tooltip';
+
+
+import { Pagination, Button, Icon, Affix, Breadcrumb, Menu, Dropdown, Select, Tooltip } from 'antd';
 const Option = Select.Option;
-import * as Tooltip from 'antd/lib/tooltip';
-
-
-// import { Button } from 'antd';
 
 function ButtonDemo(props) {
     return <Button>123123</Button>；
@@ -66,7 +67,7 @@ function DropdownDemo(props) {
     </Dropdown>
 }
 function PaginationDemo(props) {
-    return <Pagination defaultCurrent={1} total={50} />
+    return <Pagination showQuickJumper defaultCurrent={2} total={500} onChange={(pageNumber) => { console.log('Page: ', pageNumber); }} />
 }
 
 function SelectDemo(props) {
@@ -114,8 +115,8 @@ class Root extends Component {
             {<AffixDemo />}
             {<BreadcrumbDemo />} */}
             {/* <DropdownDemo /> */}
-           {/*  <SelectDemo /> */}
-             <PaginationDemo />
+            {/*  <SelectDemo /> */}
+            <PaginationDemo />
             {/* <TooltipDemo /> */}
             {/* <button onClick={() => {
                 this.setState({ name: 'root++', c: undefined });

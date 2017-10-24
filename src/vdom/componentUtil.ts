@@ -83,10 +83,10 @@ export function createComponent(Ctor, props, context) {
 
     } else {
         // 无状态组件
-        class C extends Component {
+        class StatelessComponent extends Component {
             render() { }
         }
-        inst = new C(props, context);
+        inst = new StatelessComponent(props, context);
         inst.constructor = Ctor;
         inst.render = inst.constructor;
     }
