@@ -93,7 +93,7 @@ export function createComponent(Ctor, props, context) {
     return inst;
 }
 export function buildComponentFromVNode(vnode: VNode, dom, context) {
-    let component: Component = dom && dom.__components__.find((c) => { return c.constructor === vnode.name; });
+    let component: Component = dom && dom.__components__ && dom.__components__.find((c) => { return c.constructor === vnode.name; });
     if (component && component.constructor === vnode.name) {
 
         component.__new__.props = propsClone(component.props, vnode.name.defaultProps, vnode.props, true);
@@ -107,14 +107,14 @@ export function buildComponentFromVNode(vnode: VNode, dom, context) {
         return renderComponent(component, RenderMode.ASYNC_RENDER, context, false);
     } else {
         if (dom) {
-            recollectNodeTree(dom);
+            //        recollectNodeTree(dom, false);
         }
         component = createComponent(vnode.name, vnode.props, context);
         // 如果 props绑定ref
         if (vnode.props.ref) {
             vnode.props.ref(component);
         }
-
+        // component.__dom__ = dom;
         component.__vnode__ = vnode;
         return renderComponent(component, RenderMode.ASYNC_RENDER, component.context, true);
     }

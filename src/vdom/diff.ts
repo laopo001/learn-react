@@ -25,21 +25,20 @@ export function diff(vnode: any | VNode, dom, context) {
         if (typeof vnode.name === 'string') {
             if (!dom || !vnode.isSameName(dom)) {
                 out = vnode.createDom();
-
-                // out.component = (vnode as any).component;
-
                 if (dom) {
-                    recollectNodeTree(dom);
+                    console.warn(1);
+                    //              recollectNodeTree(dom, false);
                 }
             }
             if (vnode.children.length > 0) {
                 diffChild(vnode.children, out.childNodes, context, out);
+            } else if (vnode.children.length === 0 && dom && dom.childNodes.length > 0) {
+                recollectNodeChildren(dom.childNodes, true);
             }
             diffProps(vnode.props, out);
             out.oldVNode = vnode;
         } else if (typeof vnode.name === 'function') {
             out = buildComponentFromVNode(vnode, dom, context);
-            // out.oldComponentVNode = vnode;
         }
 
 
@@ -53,7 +52,9 @@ export function diff(vnode: any | VNode, dom, context) {
             } else {
                 out = document.createTextNode(vnode as string);
                 if (dom) {
-                    if (dom.parentNode) dom.replaceChild(out, dom);
+                    console.warn(2);
+                    // recollectNodeTree(dom);
+                    // if (dom.parentNode) dom.replaceChild(out, dom);
                 }
             }
             out[KEY] = true;
@@ -80,6 +81,7 @@ function diffChild(vnodeChildren, domChildren, context, out) {
         let childDOM = domChildren === undefined ? undefined : domChildren[j];
 
         if (child.key != null) {
+            console.log(child);
             if (keyObj[child.key] !== undefined) {
                 childDOM = keyObj[child.key];
                 keyObj[child.key] = undefined;
@@ -97,10 +99,10 @@ function diffChild(vnodeChildren, domChildren, context, out) {
                 callDidMount(false);
             }
         } else if (newChildDOM !== childDOM) {
-            if (!childDOM.markOut) {
-                out.insertBefore(newChildDOM, childDOM);
-                callDidMount(false);
-            }
+
+            out.replaceChild(newChildDOM, childDOM);
+            recollectNodeTree(childDOM, false);
+            callDidMount(false);
         }
         j++;
     }
@@ -111,23 +113,29 @@ function diffProps(props, out) {
     for (let name in props) {
         if (name === 'children') continue;
         if (out && out[name] !== props[name]) {
-            // out[name] = props[name];
             setAttribute(out, name, props[name], oldProps[name]);
         }
         if (out.oldVNode && !(name in oldProps)) {
             out.removeAttribute(name);
-            // out[name] = '';
         }
     }
 }
+export function recollectNodeChildren(doms, isRemove) {
+    for (let i = 0; i < doms.length; i++) {
+        recollectNodeTree(doms[i], isRemove);
+    }
+}
 
-export function recollectNodeTree(dom) {
+export function recollectNodeTree(dom, isRemove) {
     if (dom.__components__) {
         dom.__components__.forEach(component => {
             unmountComponent(component);
         });
-        // unmountComponent(dom.__component__);
     }
     dom.markOut = true;
-    dom.parentNode.removeChild(dom);
+    recollectNodeChildren(dom.childNodes, false);
+    if (isRemove) {
+        dom.parentNode.removeChild(dom);
+    }
+    // dom.parentNode.removeChild(dom);
 }
