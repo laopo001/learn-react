@@ -12,7 +12,7 @@ export function removeNode(node) {
 
 export function setAttribute(dom, name, value, oldvalue) {
     if (name === 'className') name = 'class';
-    if (name === 'key') { }
+    if (name === 'key') {console.log(dom);  }
     else if (name === 'ref') {
         // if (typeof value === 'string') {
         //     if (dom.component.refs === undefined || !Object.isExtensible(dom.component.refs)) { dom.component.refs = {}; }

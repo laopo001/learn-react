@@ -71,6 +71,9 @@ function diffChild(vnodeChildren, domChildren, context, out) {
         let key = vnodeChildren[i].key;
         if (key != null) {
             keyObj[key] = domChildren[i];
+            if (domChildren[i]) {
+                domChildren[i].__key__ = true;
+            }
             keyObjLen++;
         }
     }
@@ -86,8 +89,19 @@ function diffChild(vnodeChildren, domChildren, context, out) {
                 childDOM = keyObj[child.key];
                 keyObj[child.key] = undefined;
             }
+        } else {
+            if (childDOM) {
+                if (childDOM.__key__ !== undefined) {
+                    i--;
+                    j++;
+                    continue;
+                } else {
+                    childDOM.__key__ = false;
+                }
+            }
         }
         let newChildDOM = diff(child, childDOM, context);
+
         if (newChildDOM == null) {
             j++;
             continue;
@@ -99,12 +113,18 @@ function diffChild(vnodeChildren, domChildren, context, out) {
                 callDidMount(false);
             }
         } else if (newChildDOM !== childDOM) {
-
             out.replaceChild(newChildDOM, childDOM);
             recollectNodeTree(childDOM, false);
             callDidMount(false);
         }
         j++;
+    }
+    if (domChildren !== undefined) {
+        for (let i = 0; i < domChildren.length; i++) {
+            if (domChildren[i].__key__ === true) {
+                recollectNodeTree(domChildren[i], true);
+            }
+        }
     }
 }
 
