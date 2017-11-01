@@ -130,7 +130,7 @@ function diffChild(vnodeChildren, domChildren, context, out) {
         }
         j++;
     }
-    for (let i = j+1; i < domArr.length; i++) {
+    for (let i = j; i < domArr.length; i++) {
         recollectNodeTree(domArr[i], true);
     }
     for (let x in keyObj) {
