@@ -65,15 +65,14 @@ export function diff(vnode: any | VNode, dom, context) {
 
 
 function diffChild(vnodeChildren, domChildren, context, out) {
+    if (domChildren == null) { domChildren = []; }
+    let keyObj = {}, keyObjLen = 0, domArr = [];
 
-    let keyObj = {}, keyObjLen = 0;
-    for (let i = 0; i < vnodeChildren.length; i++) {
-        let key = vnodeChildren[i].key;
-        if (key != null) {
+    for (let i = 0; i < domChildren.length; i++) {
+        domArr.push(domChildren[i]);
+        let key = domChildren[i].__key__;
+        if (key !== undefined) {
             keyObj[key] = domChildren[i];
-            if (domChildren[i]) {
-                domChildren[i].__key__ = true;
-            }
             keyObjLen++;
         }
     }
@@ -81,37 +80,49 @@ function diffChild(vnodeChildren, domChildren, context, out) {
     for (let i = 0; i < vnodeChildren.length; i++) {
         let child = vnodeChildren[i];
         // if (child instanceof VNode) (child as any).component = out.component;
-        let childDOM = domChildren === undefined ? undefined : domChildren[j];
+        let childDOM = domArr[j];
+        let tempDom = undefined;
 
-        if (child.key != null) {
+        if (child.key !== undefined) {
             console.log(child);
             if (keyObj[child.key] !== undefined) {
                 childDOM = keyObj[child.key];
                 keyObj[child.key] = undefined;
-            }
-        } else {
-            if (childDOM) {
-                if (childDOM.__key__ !== undefined) {
-                    i--;
-                    j++;
-                    continue;
-                } else {
-                    childDOM.__key__ = false;
+            } else {
+                if (childDOM && childDOM.__key__ !== undefined) {
+                    tempDom = childDOM;
+                    childDOM = undefined;
                 }
             }
         }
+        // if (childDOM) {
+        //     if (childDOM.__key__ !== undefined) {
+        //         childDOM = undefined;
+        //         // i--;
+        //         // j++;
+        //         // continue;
+        //     }
+        // }
+
         let newChildDOM = diff(child, childDOM, context);
 
         if (newChildDOM == null) {
+            console.log(child, 'newChildDOM==null');
             j++;
             continue;
+        } else {
+            newChildDOM.__key__ = child.key;
         }
 
-        if (childDOM == null) {
+        if (childDOM == null && tempDom == null) {
             out.appendChild(newChildDOM);
             if (child instanceof VNode && typeof child.name === 'function') {
                 callDidMount(false);
             }
+        } else if (tempDom != null) {
+            out.insertBefore(newChildDOM, tempDom);
+            callDidMount(false);
+            j--;
         } else if (newChildDOM !== childDOM) {
             out.replaceChild(newChildDOM, childDOM);
             recollectNodeTree(childDOM, false);
@@ -119,13 +130,15 @@ function diffChild(vnodeChildren, domChildren, context, out) {
         }
         j++;
     }
-    if (domChildren !== undefined) {
-        for (let i = 0; i < domChildren.length; i++) {
-            if (domChildren[i].__key__ === true) {
-                recollectNodeTree(domChildren[i], true);
-            }
+    for (let i = j+1; i < domArr.length; i++) {
+        recollectNodeTree(domArr[i], true);
+    }
+    for (let x in keyObj) {
+        if (keyObj[x] != null) {
+            recollectNodeTree(keyObj[x], true);
         }
     }
+
 }
 
 function diffProps(props, out) {

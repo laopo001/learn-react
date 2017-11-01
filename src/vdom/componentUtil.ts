@@ -13,7 +13,7 @@ export let DidMounts = [];
 let isDid = false;
 
 export function callDidMount(is) {
-    if (is) { isDid = is; } else { return; }
+    if (is !== isDid) { isDid = is; } else { return; }
     DidMounts.forEach(c => {
         c.componentDidMount();
     });
