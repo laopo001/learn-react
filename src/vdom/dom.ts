@@ -12,13 +12,15 @@ export function removeNode(node) {
 
 export function setAttribute(dom, name, value, oldvalue) {
     if (name === 'className') name = 'class';
-    if (name === 'key') { }
+    if (name === 'key') {
+        dom.setAttribute(name, value);
+    }
     else if (name === 'ref') {
         // if (typeof value === 'string') {
         //     if (dom.component.refs === undefined || !Object.isExtensible(dom.component.refs)) { dom.component.refs = {}; }
         //     dom.component.refs[value] = dom;
         // } else
-         if (typeof value === 'function') {
+        if (typeof value === 'function') {
             value(dom);
         }
     } else if (name === 'class') {
@@ -59,4 +61,14 @@ export function setAttribute(dom, name, value, oldvalue) {
 
 function eventProxy(e) {
     return this._listeners[e.type](options.event && options.event(e) || e);
+}
+
+export function insertAfter(newEl, targetEl) {
+    const parentEl = targetEl.parentNode;
+
+    if (parentEl.lastChild === targetEl) {
+        parentEl.appendChild(newEl);
+    } else {
+        parentEl.insertBefore(newEl, targetEl.nextSibling);
+    }
 }

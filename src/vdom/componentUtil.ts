@@ -10,16 +10,16 @@ import { propsClone } from './util';
 
 export let DidMounts = [];
 
-let isDid = false;
 
-export function callDidMount(is) {
-    if (is !== isDid) { isDid = is; } else { return; }
+
+export function callDidMount() {
+    if (callDidMount['isFirstCreate']) return;
     DidMounts.forEach(c => {
         c.componentDidMount();
     });
     DidMounts = [];
 }
-
+callDidMount['isFirstCreate'] = true;
 function setState(state, callback?) {
     this.__new__.state = Object.assign({}, this.state, state);
     if (callback) this._renderCallbacks.push(callback);

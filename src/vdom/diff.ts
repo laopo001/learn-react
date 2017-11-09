@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import { KEY, RenderMode } from '../config/';
-import { removeNode, setAttribute } from './dom';
+import { removeNode, setAttribute, insertAfter } from './dom';
 import { isNamedNode, createNode, isSameNodeType } from './util';
 import { buildComponentFromVNode, unmountComponent, renderComponent, callDidMount } from './componentUtil';
 import { VNode } from '../vnode';
@@ -15,7 +15,8 @@ let hydrating = false;
 export function create(vnode: VNode, context, parent) {
     let ret = diff(vnode, null, context);
     if (parent) parent.appendChild(ret);
-    callDidMount(true);
+    callDidMount();
+    callDidMount['isFirstCreate'] = false;
     return ret;
 }
 
@@ -43,7 +44,9 @@ export function diff(vnode: any | VNode, dom, context) {
 
 
     } else {
-        if (vnode == null || typeof vnode === 'boolean') vnode = '';
+        if (vnode == null || typeof vnode === 'boolean') {
+            vnode = '';
+        }
         if (typeof vnode === 'string' || typeof vnode === 'number') {
             if (dom && dom.splitText !== undefined) {
                 if (dom.nodeValue !== vnode) {
@@ -65,7 +68,9 @@ export function diff(vnode: any | VNode, dom, context) {
 
 
 function diffChild(vnodeChildren, domChildren, context, out) {
+
     if (domChildren == null) { domChildren = []; }
+
     let keyObj = {}, keyObjLen = 0, domArr = [];
 
     for (let i = 0; i < domChildren.length; i++) {
@@ -77,61 +82,76 @@ function diffChild(vnodeChildren, domChildren, context, out) {
         }
     }
     let j = 0;
+    let lastChildDom;
     for (let i = 0; i < vnodeChildren.length; i++) {
+
         let child = vnodeChildren[i];
         // if (child instanceof VNode) (child as any).component = out.component;
         let childDOM = domArr[j];
-        let tempDom = undefined;
-
-        if (child.key !== undefined) {
-            console.log(child);
-            if (keyObj[child.key] !== undefined) {
-                childDOM = keyObj[child.key];
-                keyObj[child.key] = undefined;
-            } else {
-                if (childDOM && childDOM.__key__ !== undefined) {
-                    tempDom = childDOM;
-                    childDOM = undefined;
-                }
-            }
-        }
-        // if (childDOM) {
-        //     if (childDOM.__key__ !== undefined) {
-        //         childDOM = undefined;
-        //         // i--;
-        //         // j++;
-        //         // continue;
-        //     }
-        // }
-
-        let newChildDOM = diff(child, childDOM, context);
-
-        if (newChildDOM == null) {
-            console.log(child, 'newChildDOM==null');
-            j++;
-            continue;
+        let newChildDOM;
+        if (child == null) {
+            newChildDOM = document.createTextNode('');
         } else {
-            newChildDOM.__key__ = child.key;
-        }
 
-        if (childDOM == null && tempDom == null) {
-            out.appendChild(newChildDOM);
-            if (child instanceof VNode && typeof child.name === 'function') {
-                callDidMount(false);
+            if (child.uuid !== undefined) {
+                console.log(child);
+                while (childDOM && childDOM.__key__ !== undefined) {
+                    j++;
+                    childDOM = domArr[j];
+                }
+
+                if (keyObj[child.uuid] !== undefined) {
+                    childDOM = keyObj[child.uuid];
+                    keyObj[child.uuid] = null;
+                } else {
+
+                    // if (childDOM && childDOM.__key__ === undefined) {
+                    childDOM = null;
+                    // }
+                }
+                j--;
+            } else {
+                // if (childDOM && childDOM.__key__ !== undefined) {
+                //     while ()
+                //         recollectNodeTree(childDOM, true);
+                // }
+
+                // while (childDOM && childDOM.__key__ !== undefined) {
+                //     j++;
+                //     childDOM = domArr[j];
+                // }
+                // j--;
             }
-        } else if (tempDom != null) {
-            out.insertBefore(newChildDOM, tempDom);
-            callDidMount(false);
-            j--;
+
+
+
+            newChildDOM = diff(child, childDOM, context);
+            newChildDOM.__key__ = child.uuid;
+        }
+        if (childDOM == null) {
+            if (lastChildDom == null) {
+                out.appendChild(newChildDOM);
+                if (child instanceof VNode && typeof child.name === 'function') {
+
+                }
+            } else {
+                insertAfter(newChildDOM, lastChildDom);
+            }
+
         } else if (newChildDOM !== childDOM) {
             out.replaceChild(newChildDOM, childDOM);
             recollectNodeTree(childDOM, false);
-            callDidMount(false);
         }
+
+        callDidMount();
+
+        lastChildDom = newChildDOM;
         j++;
     }
-    for (let i = j; i < domArr.length; i++) {
-        recollectNodeTree(domArr[i], true);
+    if (domArr.length > 0 && j < domArr.length && domArr[j].__key__ != null) {
+        for (let i = j; i < domArr.length; i++) {
+            recollectNodeTree(domArr[i], true);
+        }
     }
     for (let x in keyObj) {
         if (keyObj[x] != null) {

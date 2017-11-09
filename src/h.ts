@@ -15,18 +15,21 @@ export function h(nodeName, props, ...children) {
         };
         props['ref'].funcName = '__ref_string__';
     }
-
+    let indexT = 0;
     for (let i = 0; i < children.length; i++) {
-        if (children[i] == null || children[i] === '') {
-            children.splice(i, 1);
-            i--;
-            continue;
-        }
-        if (children[i].constructor === Array) {
+        // if (children[i] == null || children[i] === '') {
+        //     children.splice(i, 1);
+        //     i--;
+        //     continue;
+        // }
+        if (children[i] != null && children[i].constructor === Array) {
             let temp = i;
             children[i].forEach((x, index) => {
+                if (x.key == null) { console.warn('key'); }
+                x.uuid = x.key + ',' + indexT;
                 children.splice(i + index + 1, 0, x);
             });
+            indexT++;
             children.splice(temp, 1);
             continue;
         }
