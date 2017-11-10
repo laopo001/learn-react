@@ -16,7 +16,7 @@ export function enqueueRender(component: Component) {
 }
 
 function rerender() {
-    let component, list = enqueue;
+    let component: Component, list = enqueue;
     enqueue = [];
     while (component = list.pop()) {
         renderComponent(component, RenderMode.ASYNC_RENDER, component.context, false);
@@ -24,7 +24,7 @@ function rerender() {
 }
 
 
-export function forceRender(component) {
+export function forceRender(component: Component) {
     renderComponent(component, RenderMode.SYNC_RENDER, {}, false);
 }
 

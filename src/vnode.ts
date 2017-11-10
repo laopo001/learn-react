@@ -1,10 +1,12 @@
 /**
  * @author dadigua
  */
-
+import { Component } from './component';
 export class VNode {
     key;
     type;
+    group: number;
+    uuid;
     constructor(public name, public props, children) {
         this.props = this.props == null ? {} : this.props;
         this.key = this.props.key;
@@ -21,7 +23,7 @@ export class VNode {
         // }
     }
     get children() {
-        if (this.props.children === undefined) { return []; }
+        if (this.props.children == null) { return []; }
         if (this.props.children.constructor === Array) {
             return this.props.children;
         } else {
@@ -39,22 +41,28 @@ export class VNode {
         dom.normalizedNodeName = this.name;
         return dom;
     }
-    childrenRef_bind(component) {
-        function run(vnode, component) {
+    childrenRef_bind(component: Component) {
+        function run(vnode: VNode, component: Component) {
             if (vnode instanceof VNode) {
-                try {
-                    if (vnode.props.ref && vnode.props.ref.funcName === '__ref_string__') {
-                        // this只有第一次bind生效；
-                        vnode.props.ref = vnode.props.ref.bind(component);
+
+                if (vnode.props.ref && vnode.props.ref.funcName === '__ref_string__') {
+                    // this只有第一次bind生效；
+                    if (!Object.isExtensible(component.refs)) {
+                        component.refs = {};
                     }
-                } catch (e) {
-                    debugger;
+                    // console.log(Object.isExtensible(component.refs));
+                    vnode.props.ref = vnode.props.ref.bind(component);
+                    vnode.props.ref.funcName = '__ref_string__false__';
                 }
+
                 vnode.children.forEach((x) => {
                     run(x, component);
                 });
             }
         }
-        run(this, component);
+        try { run(this, component); }
+        catch (e) {
+            debugger;
+        }
     }
 }

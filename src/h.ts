@@ -4,8 +4,8 @@
 
 const EMPTY_CHILDREN = [];
 import { VNode } from './vnode';
-
-export function h(nodeName, props, ...children) {
+import { Component } from './component';
+export function h(nodeName: string | Function, props, ...children) {
 
     if (props && 'ref' in props && typeof props['ref'] === 'string') {
         // ref string 转 function方式
@@ -24,9 +24,19 @@ export function h(nodeName, props, ...children) {
         // }
         if (children[i] != null && children[i].constructor === Array) {
             let temp = i;
+            let lastConstructor;
             children[i].forEach((x, index) => {
-                if (x.key == null) { console.warn('key'); }
-                x.uuid = x.key + ',' + indexT;
+                if (x.constructor === lastConstructor && x.key == null) {
+                    //  console.warn('key');
+                }
+                lastConstructor = x.constructor;
+                // x.uuid = x.key + ',' + indexT;
+                if (x instanceof VNode) {
+                    x.group = indexT;
+                    if (x.key != null) {
+                        x.uuid = x.key + ',' + indexT;
+                    }
+                }
                 children.splice(i + index + 1, 0, x);
             });
             indexT++;
@@ -40,6 +50,7 @@ export function h(nodeName, props, ...children) {
 }
 
 export function cloneElement(vnode, props) {
+    if (!(vnode instanceof VNode)) { console.error('输入不是一个VNode类型'); return; }
     return h(
         vnode.name,
         Object.assign({}, vnode.props, props),
@@ -49,4 +60,18 @@ export function cloneElement(vnode, props) {
 
 export function isValidElement(element) {
     return element && ((element instanceof VNode));
+}
+
+
+
+export function createClass(obj): any {
+
+    class ObjectComponent extends Component {
+        state = obj.getInitialState == null ? {} : obj.getInitialState();
+        render() {
+            return obj.render.call(this);
+        }
+        static defaultProps = obj.getDefaultProps == null ? {} : obj.getDefaultProps();
+    }
+    return ObjectComponent;
 }

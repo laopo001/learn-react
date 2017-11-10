@@ -1,8 +1,8 @@
 {
-  "name": "mygame",
-  "version": "1.0.0",
+  "name": "abc",
+  "version": "0.0.3",
   "description": "无",
-  "main": "",
+  "main": "lib/index.js",
   "scripts": {
     "start": "npm run build",
     "demo": "webpack --display-error-details --progress --colors --watch",

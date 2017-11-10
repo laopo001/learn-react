@@ -3,26 +3,35 @@
  */
 import { enqueueRender, forceRender } from './rerender';
 
+export interface ICache {
+    state;
+    props?;
+    context?;
+}
 
 export abstract class Component {
-    __dom__;
-    __vnode__;
-    __new__: any = {};
-    __old__: any = {};
-    state = {};
-    refs = {};
+    __dom__: Element;
+    __new__: ICache = {
+        state: {}
+    };
+    __old__: ICache = {
+        state: {}
+    };
+    state: any = {};
+    refs: any = {};
     private _renderCallbacks = [];
     // private _dirty = true;
     // get dirty() {
     //     return this._dirty;
     // }
     constructor(public props, public context) {
+
     }
     getChildContext() {
         return {};
     }
     setState(state, callback?) {
-        this.__new__.state = Object.assign({}, this.state, state);
+        this.__new__.state = Object.assign(this.__new__.state, state);
         if (callback) this._renderCallbacks.push(callback);
         enqueueRender(this);
     }

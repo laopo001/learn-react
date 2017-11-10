@@ -19,16 +19,16 @@ export function callDidMount() {
     });
     DidMounts = [];
 }
-callDidMount['isFirstCreate'] = true;
+
 function setState(state, callback?) {
     this.__new__.state = Object.assign({}, this.state, state);
     if (callback) this._renderCallbacks.push(callback);
 }
 
-export function renderComponent(component: Component, opts: RenderMode, context, isCreate) {
+export function renderComponent(component: Component, opts: RenderMode, context, isCreate: boolean) {
     let old = { state: component.state, props: component.props, context: component.context };
     let newObj = {
-        state: component.__new__.state === undefined ? component.state : component.__new__.state,
+        state: Object.assign({}, component.state, component.__new__.state),
         props: component.__new__.props === undefined ? component.props : component.__new__.props,
         context: component.__new__.context === undefined ? component.context : component.__new__.context,
     };
@@ -46,12 +46,10 @@ export function renderComponent(component: Component, opts: RenderMode, context,
         component.context = newObj.context;
 
     }
-    let vnode = component.render(component.props, component.context);
-    if (vnode == null) {
-        // console.warn('render return void');
-        return vnode;
+    let vnode: VNode = component.render(component.props, component.context);
+    if (vnode != null) {
+        vnode.childrenRef_bind(component);
     }
-    vnode.childrenRef_bind(component);
     let dom = diff(vnode, component.__dom__, context);
     component.__dom__ = dom;
     if (dom.__components__ == null) {
@@ -79,7 +77,9 @@ export function createComponent(Ctor, props, context) {
         inst = new Ctor(t_props, context);
         if (inst.context == null) inst.context = context;
         inst.context = Object.assign({}, inst.context, inst.getChildContext());
-        if (inst.__new__ === undefined) { inst.__new__ = {}; }
+        if (inst.__new__ === undefined) {
+            inst.__new__ = { state: {} };
+        }
 
     } else {
         // 无状态组件
@@ -92,7 +92,7 @@ export function createComponent(Ctor, props, context) {
     }
     return inst;
 }
-export function buildComponentFromVNode(vnode: VNode, dom, context) {
+export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
     let component: Component = dom && dom.__components__ && dom.__components__.find((c) => { return c.constructor === vnode.name; });
     if (component && component.constructor === vnode.name) {
 
@@ -114,12 +114,10 @@ export function buildComponentFromVNode(vnode: VNode, dom, context) {
         if (vnode.props.ref) {
             vnode.props.ref(component);
         }
-        // component.__dom__ = dom;
-        component.__vnode__ = vnode;
         return renderComponent(component, RenderMode.ASYNC_RENDER, component.context, true);
     }
 }
 
-export function unmountComponent(component) {
+export function unmountComponent(component: Component) {
     component.componentWillUnmount();
 }

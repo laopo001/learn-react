@@ -1,1 +1,1 @@
-# 研究preact，react实现。
+# mini-react实现。

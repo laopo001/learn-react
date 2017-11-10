@@ -4,7 +4,7 @@
 import { KEY, RenderMode } from '../config/';
 import { removeNode, setAttribute, insertAfter } from './dom';
 import { isNamedNode, createNode, isSameNodeType } from './util';
-import { buildComponentFromVNode, unmountComponent, renderComponent, callDidMount } from './componentUtil';
+import { RenderComponentFromVNode, unmountComponent, renderComponent, callDidMount } from './componentUtil';
 import { VNode } from '../vnode';
 
 export const mounts = [];
@@ -13,10 +13,11 @@ let isSvgMode = false;
 let hydrating = false;
 
 export function create(vnode: VNode, context, parent) {
+    callDidMount['isFirstCreate'] = true;
     let ret = diff(vnode, null, context);
     if (parent) parent.appendChild(ret);
-    callDidMount();
     callDidMount['isFirstCreate'] = false;
+    callDidMount();
     return ret;
 }
 
@@ -39,12 +40,12 @@ export function diff(vnode: any | VNode, dom, context) {
             diffProps(vnode.props, out);
             out.oldVNode = vnode;
         } else if (typeof vnode.name === 'function') {
-            out = buildComponentFromVNode(vnode, dom, context);
+            out = RenderComponentFromVNode(vnode, dom, context);
         }
 
 
     } else {
-        if (vnode == null || typeof vnode === 'boolean') {
+        if (vnode == null || typeof vnode === 'boolean' || typeof vnode === 'object') {
             vnode = '';
         }
         if (typeof vnode === 'string' || typeof vnode === 'number') {
@@ -67,7 +68,7 @@ export function diff(vnode: any | VNode, dom, context) {
 }
 
 
-function diffChild(vnodeChildren, domChildren, context, out) {
+function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
 
     if (domChildren == null) { domChildren = []; }
 
@@ -92,41 +93,26 @@ function diffChild(vnodeChildren, domChildren, context, out) {
         if (child == null) {
             newChildDOM = document.createTextNode('');
         } else {
-
             if (child.uuid !== undefined) {
-                console.log(child);
                 while (childDOM && childDOM.__key__ !== undefined) {
                     j++;
                     childDOM = domArr[j];
                 }
-
                 if (keyObj[child.uuid] !== undefined) {
                     childDOM = keyObj[child.uuid];
                     keyObj[child.uuid] = null;
                 } else {
-
-                    // if (childDOM && childDOM.__key__ === undefined) {
                     childDOM = null;
-                    // }
                 }
                 j--;
-            } else {
-                // if (childDOM && childDOM.__key__ !== undefined) {
-                //     while ()
-                //         recollectNodeTree(childDOM, true);
-                // }
-
-                // while (childDOM && childDOM.__key__ !== undefined) {
-                //     j++;
-                //     childDOM = domArr[j];
-                // }
-                // j--;
             }
-
-
-
             newChildDOM = diff(child, childDOM, context);
-            newChildDOM.__key__ = child.uuid;
+            try {
+                newChildDOM.__key__ = child.uuid;
+            } catch (error) {
+                debugger;
+            }
+      
         }
         if (childDOM == null) {
             if (lastChildDom == null) {
