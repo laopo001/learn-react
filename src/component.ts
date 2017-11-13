@@ -7,15 +7,14 @@ export interface ICache {
     state;
     props?;
     context?;
+    direct: boolean;
 }
 
 export abstract class Component {
     __dom__: Element;
     __new__: ICache = {
-        state: {}
-    };
-    __old__: ICache = {
-        state: {}
+        state: {},
+        direct: false
     };
     state: any = {};
     refs: any = {};
@@ -31,9 +30,15 @@ export abstract class Component {
         return {};
     }
     setState(state, callback?) {
-        this.__new__.state = Object.assign(this.__new__.state, state);
-        if (callback) this._renderCallbacks.push(callback);
-        enqueueRender(this);
+        if (this.__new__.direct === false) {
+            this.__new__.state = Object.assign(this.__new__.state, state);
+            if (callback) this._renderCallbacks.push(callback);
+            enqueueRender(this);
+        } else {
+            this.__new__.state = Object.assign({}, this.state, state);
+            if (callback) this._renderCallbacks.push(callback);
+        }
+
     }
     forceUpdate(callback) {
         if (callback) this._renderCallbacks.push(callback);
@@ -49,3 +54,6 @@ export abstract class Component {
     abstract render(props, context);
 }
 
+export abstract class PureComponent extends Component {
+
+}

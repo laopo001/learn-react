@@ -22,6 +22,9 @@ export function h(nodeName: string | Function, props, ...children) {
         //     i--;
         //     continue;
         // }
+        if (typeof children[i] === 'boolean') {
+            children[i] = null;
+        }
         if (children[i] != null && children[i].constructor === Array) {
             let temp = i;
             // let lastConstructor;

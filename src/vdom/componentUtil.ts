@@ -19,7 +19,7 @@ export function callDidMount() {
     });
     DidMounts = [];
 }
-
+callDidMount['isFirstCreate'] = true;
 function setState(state, callback?) {
     this.__new__.state = Object.assign({}, this.state, state);
     if (callback) this._renderCallbacks.push(callback);
@@ -27,16 +27,27 @@ function setState(state, callback?) {
 
 export function renderComponent(component: Component, opts: RenderMode, context, isCreate: boolean) {
     let old = { state: component.state, props: component.props, context: component.context };
-    let newObj = {
-        state: Object.assign({}, component.state, component.__new__.state),
-        props: component.__new__.props === undefined ? component.props : component.__new__.props,
-        context: component.__new__.context === undefined ? component.context : component.__new__.context,
-    };
+    // let newObj = {
+    //     state: Object.assign({}, component.state, component.__new__.state),
+    //     props: component.__new__.props === undefined ? component.props : component.__new__.props,
+    //     context: component.__new__.context === undefined ? component.context : component.__new__.context,
+    // };
     if (isCreate) {
-        let innerComponent = Object.assign({ setState }, component);
-        innerComponent['__proto__'] = component['__proto__'];
-        component.componentWillMount.call(innerComponent);
+        // let innerComponent = Object.assign({ setState }, component);
+        // innerComponent['__proto__'] = component['__proto__'];
+        // component.componentWillMount.call(innerComponent);
+        component.__new__.direct = true;
+        component.componentWillMount();
+        component.__new__.direct = false;
+        component.state = Object.assign({}, component.state, component.__new__.state);
+        component.props = component.__new__.props === undefined ? component.props : component.__new__.props;
+        component.context = component.__new__.context === undefined ? component.context : component.__new__.context;
     } else {
+        let newObj = {
+            state: Object.assign({}, component.state, component.__new__.state),
+            props: component.__new__.props === undefined ? component.props : component.__new__.props,
+            context: component.__new__.context === undefined ? component.context : component.__new__.context,
+        };
         if (opts === RenderMode.ASYNC_RENDER && !component.shouldComponentUpdate(newObj.props, newObj.state, newObj.context)) { return component.__dom__; }
 
         component.componentWillUpdate(newObj.props, newObj.state, newObj.context);
@@ -75,6 +86,7 @@ export function createComponent(Ctor, props, context) {
         // }
         let t_props = propsClone({}, Ctor.defaultProps, props);
         inst = new Ctor(t_props, context);
+        if (inst.props == null) inst.props = t_props;
         if (inst.context == null) inst.context = context;
         inst.context = Object.assign({}, inst.context, inst.getChildContext());
         if (inst.__new__ === undefined) {
@@ -98,9 +110,13 @@ export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
 
         component.__new__.props = propsClone(component.props, vnode.name.defaultProps, vnode.props, true);
         component.__new__.context = Object.assign({}, component.context, context);
-        let innerComponent = Object.assign({ setState }, component);
-        innerComponent['__proto__'] = component['__proto__'];
-        component.componentWillReceiveProps.call(innerComponent, component.__new__.props, component.__new__.context);
+        // let innerComponent = Object.assign({ setState }, component);
+        // innerComponent['__proto__'] = component['__proto__'];
+        // component.componentWillReceiveProps.call(innerComponent, component.__new__.props, component.__new__.context);
+
+        component.__new__.direct = true;
+        component.componentWillReceiveProps(component.__new__.props, component.__new__.context);
+        component.__new__.direct = false;
         if (vnode.props.ref) {
             vnode.props.ref(component);
         }
