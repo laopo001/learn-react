@@ -8,9 +8,7 @@ import { RenderComponentFromVNode, unmountComponent, renderComponent, callDidMou
 import { VNode } from '../vnode';
 
 export const mounts = [];
-let diffCount = 0;
 let isSvgMode = false;
-let hydrating = false;
 
 export function create(vnode: VNode, context, parent) {
     callDidMount['isFirstCreate'] = true;
@@ -27,10 +25,10 @@ export function diff(vnode: any | VNode, dom, context) {
         if (typeof vnode.name === 'string') {
             if (!dom || !vnode.isSameName(dom)) {
                 out = vnode.createDom();
-                if (dom) {
-                    console.warn(1);
-                    //              recollectNodeTree(dom, false);
-                }
+                // if (dom) {
+                //     console.warn(1);
+                //     //              recollectNodeTree(dom, false);
+                // }
             }
             if (vnode.children.length > 0) {
                 diffChild(vnode.children, out.childNodes, context, out);

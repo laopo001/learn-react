@@ -16,10 +16,6 @@ export function setAttribute(dom, name, value, oldvalue) {
         dom.setAttribute(name, value);
     }
     else if (name === 'ref') {
-        // if (typeof value === 'string') {
-        //     if (dom.component.refs === undefined || !Object.isExtensible(dom.component.refs)) { dom.component.refs = {}; }
-        //     dom.component.refs[value] = dom;
-        // } else
         if (typeof value === 'function') {
             value(dom);
         }
@@ -50,9 +46,12 @@ export function setAttribute(dom, name, value, oldvalue) {
         }
         (dom._listeners || (dom._listeners = {}))[name] = value;
     } else if (name in dom) {
-
-        dom[name] = value || '';
-        if (value == null || value === false) dom.removeAttribute(name);
+        try {
+            dom[name] = value || '';
+            if (value == null || value === false) dom.removeAttribute(name);
+        } catch (e) {
+            dom.setAttribute(name, value);
+        }
     } else {
         dom.setAttribute(name, value);
     }

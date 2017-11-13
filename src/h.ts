@@ -24,12 +24,12 @@ export function h(nodeName: string | Function, props, ...children) {
         // }
         if (children[i] != null && children[i].constructor === Array) {
             let temp = i;
-            let lastConstructor;
+            // let lastConstructor;
             children[i].forEach((x, index) => {
-                if (x.constructor === lastConstructor && x.key == null) {
-                    //  console.warn('key');
-                }
-                lastConstructor = x.constructor;
+                // if (x.constructor === lastConstructor && x.key == null) {
+                //     //  console.warn('key');
+                // }
+                // lastConstructor = x.constructor;
                 // x.uuid = x.key + ',' + indexT;
                 if (x instanceof VNode) {
                     x.group = indexT;

@@ -48,7 +48,7 @@ export class VNode {
                 if (vnode.props.ref && vnode.props.ref.funcName === '__ref_string__') {
                     // this只有第一次bind生效；
                     if (!Object.isExtensible(component.refs)) {
-                        component.refs = {};
+                        component.refs = Object.assign({}, component.refs);
                     }
                     // console.log(Object.isExtensible(component.refs));
                     vnode.props.ref = vnode.props.ref.bind(component);

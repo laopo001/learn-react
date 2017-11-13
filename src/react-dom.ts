@@ -8,7 +8,7 @@ import { renderComponent, RenderComponentFromVNode } from './vdom/componentUtil'
 import { RenderMode } from './config/';
 
 export function findDOMNode(component: Component) {
-    return component.__dom__;
+    return component && component.__dom__ || null;
 }
 
 const ARR = [];
