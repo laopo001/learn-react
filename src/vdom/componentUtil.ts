@@ -20,10 +20,7 @@ export function callDidMount() {
     DidMounts = [];
 }
 callDidMount['isFirstCreate'] = true;
-function setState(state, callback?) {
-    this.__new__.state = Object.assign({}, this.state, state);
-    if (callback) this._renderCallbacks.push(callback);
-}
+
 
 export function renderComponent(component: Component, opts: RenderMode, context, isCreate: boolean) {
     let old = { state: component.state, props: component.props, context: component.context };
@@ -33,15 +30,13 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     //     context: component.__new__.context === undefined ? component.context : component.__new__.context,
     // };
     if (isCreate) {
-        // let innerComponent = Object.assign({ setState }, component);
-        // innerComponent['__proto__'] = component['__proto__'];
-        // component.componentWillMount.call(innerComponent);
+
         component.__new__.direct = true;
         component.componentWillMount();
         component.__new__.direct = false;
         component.state = Object.assign({}, component.state, component.__new__.state);
-        component.props = component.__new__.props === undefined ? component.props : component.__new__.props;
-        component.context = component.__new__.context === undefined ? component.context : component.__new__.context;
+        // component.props = component.__new__.props === undefined ? component.props : component.__new__.props;
+        // component.context = component.__new__.context === undefined ? component.context : component.__new__.context;
     } else {
         let newObj = {
             state: Object.assign({}, component.state, component.__new__.state),
@@ -61,7 +56,8 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     if (vnode != null) {
         vnode.childrenRef_bind(component);
     }
-    let dom = diff(vnode, component.__dom__, context);
+    let nextContext = Object.assign({}, component.context, context);
+    let dom = diff(vnode, component.__dom__, nextContext);
     component.__dom__ = dom;
     if (dom.__components__ == null) {
         dom.__components__ = [component];
@@ -73,24 +69,28 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     if (isCreate) {
         DidMounts.push(component);
     } else {
-        component.componentDidUpdate(old.props, old.state, old.context);
+        component.componentDidUpdate && component.componentDidUpdate(old.props, old.state, old.context);
     }
     return dom;
 }
+
+
 export function createComponent(Ctor, props, context) {
-    let inst;
+    let component;
     // 类形式的组件
     if (Ctor.prototype && Ctor.prototype.render) {
         // if (Ctor.prototype.getDefaultProps) {
         //     Ctor.defaultProps = Ctor.prototype.getDefaultProps();
         // }
+
         let t_props = propsClone({}, Ctor.defaultProps, props);
-        inst = new Ctor(t_props, context);
-        if (inst.props == null) inst.props = t_props;
-        if (inst.context == null) inst.context = context;
-        inst.context = Object.assign({}, inst.context, inst.getChildContext());
-        if (inst.__new__ === undefined) {
-            inst.__new__ = { state: {} };
+        component = new Ctor(t_props, context);
+
+        if (component.props == null) component.props = t_props;
+        if (component.context == null) component.context = context;
+        // inst.context = Object.assign({}, inst.context, inst.getChildContext());
+        if (component.__new__ === undefined) {
+            component.__new__ = { state: {} };
         }
 
     } else {
@@ -98,11 +98,11 @@ export function createComponent(Ctor, props, context) {
         class StatelessComponent extends Component {
             render() { }
         }
-        inst = new StatelessComponent(props, context);
-        inst.constructor = Ctor;
-        inst.render = inst.constructor;
+        component = new StatelessComponent(props, context);
+        component.constructor = Ctor;
+        component.render = component.constructor;
     }
-    return inst;
+    return component;
 }
 export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
     let component: Component = dom && dom.__components__ && dom.__components__.find((c) => { return c.constructor === vnode.name; });
@@ -110,27 +110,21 @@ export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
 
         component.__new__.props = propsClone(component.props, vnode.name.defaultProps, vnode.props, true);
         component.__new__.context = Object.assign({}, component.context, context);
-        // let innerComponent = Object.assign({ setState }, component);
-        // innerComponent['__proto__'] = component['__proto__'];
-        // component.componentWillReceiveProps.call(innerComponent, component.__new__.props, component.__new__.context);
-
         component.__new__.direct = true;
         component.componentWillReceiveProps(component.__new__.props, component.__new__.context);
         component.__new__.direct = false;
         if (vnode.props.ref) {
             vnode.props.ref(component);
         }
-        return renderComponent(component, RenderMode.ASYNC_RENDER, context, false);
+        return renderComponent(component, RenderMode.ASYNC_RENDER, component.getChildContext() , false);
     } else {
-        if (dom) {
-            //        recollectNodeTree(dom, false);
-        }
-        component = createComponent(vnode.name, vnode.props, context);
+
+        let component = createComponent(vnode.name, vnode.props, context);
         // 如果 props绑定ref
         if (vnode.props.ref) {
             vnode.props.ref(component);
         }
-        return renderComponent(component, RenderMode.ASYNC_RENDER, component.context, true);
+        return renderComponent(component, RenderMode.ASYNC_RENDER,  component.getChildContext(), true);
     }
 }
 

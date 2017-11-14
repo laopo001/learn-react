@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import React, { Component, render } from 'react';
-
+import * as createReactClass from 'create-react-class';
 
 
 import { Pagination, Button, Icon, Affix, Breadcrumb, Menu, Dropdown, Select, Tooltip, Tabs } from 'antd';
@@ -96,20 +96,35 @@ const Es5 = React.createClass({
     }
 });
 
+const Greeting = createReactClass({
+    componentDidMount() {
+        this.setState({cout: 1});
+    }
+    render: function() {
+      return <h1>Hello, {this.props.name}</h1>;
+    }
+  });
+
 class Root extends Component {
     state = {
         name: '',
         id: 'qq',
-        c: 'szxvzxv'
+        c: 'szxvzxv',
+        cout: 0
     };
     getChildContext() {
         return { name: 'context+++' };
     }
     componentDidMount() {
-        console.log(this.refs.book);
+        this.setState({cout: 1});
+        console.log(this.context);
     }
     render() {
+        if (this.state.cout === 0) {
+            return null;
+        }
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
+            <Greeting name='ggg'/>
             <br />
             {<Tabs defaultActiveKey='1' onChange={() => { }}>
                 <TabPane tab='Tab 1' key='1'>Content of Tab Pane 1</TabPane>
@@ -129,7 +144,7 @@ class Root extends Component {
             <PaginationDemo />
             {/* <TooltipDemo /> */}
             {<button onClick={() => {
-                this.setState({ name: 'root++', c: <Book long='ppp'>children</Book> });
+                this.setState({ name: 'root++', c: <Book long='ppp'><Q/>children</Book> });
             }}>update</button>}
 
         </div >;
@@ -137,8 +152,11 @@ class Root extends Component {
 }
 
 class Book extends Component<any, any> {
+    getChildContext() {
+        return { color: '9999' };
+    }
     componentDidMount() {
-        console.log(this.refs.dom);
+        console.log('componentDidMount1', this.context);
     }
     componentWillUnmount() {
         console.log('componentWillUnmount');
@@ -152,5 +170,23 @@ class Book extends Component<any, any> {
             }</div>;
     }
 }
+class Q extends Component {
+    constructor() {
+      super();
+      this.state = {
+      };
+    }
 
+    componentDidMount() {
+      console.log('componentDidMount2', this.context)
+    }
+
+    render() {
+      return (
+        <div>
+          {this.props.name}
+        </div>
+      );
+    }
+  }
 render(<Root />, document.getElementById('root'));

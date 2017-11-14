@@ -30,6 +30,9 @@ export abstract class Component {
         return {};
     }
     setState(state, callback?) {
+        if (typeof state === 'function') {
+            state = state(this.state);
+        }
         if (this.__new__.direct === false) {
             this.__new__.state = Object.assign(this.__new__.state, state);
             if (callback) this._renderCallbacks.push(callback);

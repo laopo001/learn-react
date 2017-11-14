@@ -1,6 +1,6 @@
 {
   "name": "abcc",
-  "version": "0.1.5",
+  "version": "0.1.10",
   "description": "无",
   "main": "lib/index.js",
   "scripts": {
@@ -18,6 +18,7 @@
     "antd": "^2.13.10",
     "browser-sync": "^2.18.12",
     "browser-sync-webpack-plugin": "^1.2.0",
+    "create-react-class": "^15.6.2",
     "ts-loader": "^0.8.2",
     "typescript": "^2.5.2",
     "webpack": "^2.7.0"

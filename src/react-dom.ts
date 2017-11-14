@@ -28,7 +28,12 @@ export const Children = {
         children.forEach(fn);
     },
     count(children) {
-        return children && children.length || 0;
+        if (children == null) { return 0; }
+        else if (children.constructor === Array) {
+            return children.length;
+        } else {
+            return 1;
+        }
     },
     only(children) {
         children = Children.toArray(children);

@@ -26,8 +26,9 @@ export function diff(vnode: any | VNode, dom, context) {
             if (!dom || !vnode.isSameName(dom)) {
                 out = vnode.createDom();
                 // if (dom) {
-                //     console.warn(1);
-                //     //              recollectNodeTree(dom, false);
+                //     // console.warn(1);
+                //     dom.parentNode.replaceChild(out, dom);
+                //     recollectNodeTree(dom, false);
                 // }
             }
             if (vnode.children.length > 0) {
@@ -39,6 +40,11 @@ export function diff(vnode: any | VNode, dom, context) {
             out.oldVNode = vnode;
         } else if (typeof vnode.name === 'function') {
             out = RenderComponentFromVNode(vnode, dom, context);
+            // if (dom) {
+            //     console.warn(3);
+            //     dom.parentNode.replaceChild(out, dom);
+            //     recollectNodeTree(dom, false);
+            // }
         }
 
 
@@ -53,14 +59,19 @@ export function diff(vnode: any | VNode, dom, context) {
                 }
             } else {
                 out = document.createTextNode(vnode as string);
-                if (dom) {
-                    console.warn(2);
-                    // recollectNodeTree(dom);
-                    // if (dom.parentNode) dom.replaceChild(out, dom);
-                }
+                // if (dom) {
+                //     console.warn(2);
+                //     dom.parentNode.replaceChild(out, dom);
+                //     recollectNodeTree(dom, false);
+                // }
             }
             out[KEY] = true;
         }
+    }
+    if (dom && dom !== out) {
+        dom.parentNode.replaceChild(out, dom);
+        recollectNodeTree(dom, false);
+        callDidMount();
     }
     return out;
 }
@@ -110,24 +121,24 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
             } catch (error) {
                 debugger;
             }
-      
+
         }
         if (childDOM == null) {
             if (lastChildDom == null) {
                 out.appendChild(newChildDOM);
-                if (child instanceof VNode && typeof child.name === 'function') {
+                // if (child instanceof VNode && typeof child.name === 'function') {
 
-                }
+                // }
             } else {
                 insertAfter(newChildDOM, lastChildDom);
             }
-
-        } else if (newChildDOM !== childDOM) {
-            out.replaceChild(newChildDOM, childDOM);
-            recollectNodeTree(childDOM, false);
+            callDidMount();
         }
+        // else if (newChildDOM !== childDOM) {
+        //     out.replaceChild(newChildDOM, childDOM);
+        //     recollectNodeTree(childDOM, false);
+        // }
 
-        callDidMount();
 
         lastChildDom = newChildDOM;
         j++;
