@@ -6,7 +6,7 @@ export class VNode {
     key;
     type;
     group: number;
-    uuid;
+    parentComponent: Component;
     constructor(public name, public props, children) {
         this.props = this.props == null ? {} : this.props;
         this.key = this.props.key;

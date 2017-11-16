@@ -36,9 +36,9 @@ export function h(nodeName: string | Function, props, ...children) {
                 // x.uuid = x.key + ',' + indexT;
                 if (x instanceof VNode) {
                     x.group = indexT;
-                    if (x.key != null) {
-                        x.uuid = x.key + ',' + indexT;
-                    }
+                    // if (x.key != null) {
+                    //     x.uuid = x.key + ',' + indexT;
+                    // }
                 }
                 children.splice(i + index + 1, 0, x);
             });

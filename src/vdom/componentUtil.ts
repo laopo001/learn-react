@@ -59,13 +59,7 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     let nextContext = Object.assign({}, component.context, context);
     let dom = diff(vnode, component.__dom__, nextContext);
     component.__dom__ = dom;
-    if (dom.__components__ == null) {
-        dom.__components__ = [component];
-    } else {
-        if (!dom.__components__.includes(component)) {
-            dom.__components__.push(component);
-        }
-    }
+    setParentComponent(dom, component);
     if (isCreate) {
         DidMounts.push(component);
     } else {
@@ -73,7 +67,35 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     }
     return dom;
 }
+export function setParentComponent(dom, component: Component) {
+    if (dom.__parentComponent__ == null) {
+        dom.__parentComponent__ = component;
+    } else {
+        let c = dom.__parentComponent__;
+        if (c === component) { return; }
+        while (c.__parentComponent__) {
+            c = c.__parentComponent__;
+            if (c === component) { return; }
+        }
+        c.__parentComponent__ = component;
+    }
+}
 
+export function findParentComponent(dom, vnode: VNode): Component | null {
+    if (dom == null) {
+        return null;
+    } else if (dom.__parentComponent__ == null) {
+        return null;
+    } else {
+        let c = dom.__parentComponent__;
+        if (c.constructor === vnode.name) { return c; }
+        while (c.__parentComponent__) {
+            c = c.__parentComponent__;
+            if (c.constructor === vnode.name) { return c; }
+        }
+        return null;
+    }
+}
 
 export function createComponent(Ctor, props, context) {
     let component;
@@ -105,7 +127,7 @@ export function createComponent(Ctor, props, context) {
     return component;
 }
 export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
-    let component: Component = dom && dom.__components__ && dom.__components__.find((c) => { return c.constructor === vnode.name; });
+    let component: Component = findParentComponent(dom, vnode);
     if (component && component.constructor === vnode.name) {
 
         component.__new__.props = propsClone(component.props, vnode.name.defaultProps, vnode.props, true);
@@ -115,16 +137,19 @@ export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
         component.__new__.direct = false;
         if (vnode.props.ref) {
             vnode.props.ref(component);
+            delete vnode.props.ref;
         }
-        return renderComponent(component, RenderMode.ASYNC_RENDER, component.getChildContext() , false);
+        return renderComponent(component, RenderMode.ASYNC_RENDER, component.getChildContext(), false);
     } else {
 
-        let component = createComponent(vnode.name, vnode.props, context);
+        let component: Component = createComponent(vnode.name, vnode.props, context);
+
         // 如果 props绑定ref
         if (vnode.props.ref) {
             vnode.props.ref(component);
+            delete vnode.props.ref;
         }
-        return renderComponent(component, RenderMode.ASYNC_RENDER,  component.getChildContext(), true);
+        return renderComponent(component, RenderMode.ASYNC_RENDER, component.getChildContext(), true);
     }
 }
 

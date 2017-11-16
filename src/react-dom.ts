@@ -4,7 +4,7 @@
 import { create } from './vdom/diff';
 import { h } from './h';
 import { Component } from './component';
-import { renderComponent, RenderComponentFromVNode } from './vdom/componentUtil';
+import { renderComponent, RenderComponentFromVNode, findParentComponent } from './vdom/componentUtil';
 import { RenderMode } from './config/';
 
 export function findDOMNode(component: Component) {
@@ -47,9 +47,9 @@ export const Children = {
 };
 
 
-export function render(vnode, parent) {
+export function render(vnode, parent): Component {
     let dom = create(vnode, {}, parent);
-    return dom.__components__[0];
+    return findParentComponent(dom, vnode);
 }
 
 
@@ -71,7 +71,7 @@ export function renderSubtreeIntoContainer(parentComponent, vnode, container, ca
     } else {
         componentDOM = RenderComponentFromVNode(wrap, container.appended, {});
     }
-    let component = componentDOM && componentDOM.__components__.find(function (c) { return c.constructor === vnode.name; });
+    let component = componentDOM &&  findParentComponent(componentDOM, vnode);
     if (callback) callback.call(component, componentDOM);
     return component;
 }

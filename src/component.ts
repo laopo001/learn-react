@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import { enqueueRender, forceRender } from './rerender';
-
+import { VNode } from './vnode';
 export interface ICache {
     state;
     props?;
