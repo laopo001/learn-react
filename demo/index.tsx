@@ -6,7 +6,8 @@ import * as createReactClass from 'create-react-class';
 
 
 import { Pagination, Button, Icon, Affix, Breadcrumb, Menu, Dropdown, Select, Tooltip, Tabs } from 'antd';
-
+const SubMenu = Menu.SubMenu;
+const MenuItemGroup = Menu.ItemGroup;
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 
@@ -98,12 +99,12 @@ const Es5 = React.createClass({
 
 const Greeting = createReactClass({
     componentDidMount() {
-        this.setState({cout: 1});
+        this.setState({ cout: 1 });
     }
-    render: function() {
-      return <h1>Hello, {this.props.name}</h1>;
+    render: function () {
+        return <h1>Hello, {this.props.name}</h1>;
     }
-  });
+});
 
 class Root extends Component {
     state = {
@@ -116,7 +117,7 @@ class Root extends Component {
         return { name: 'context+++' };
     }
     componentDidMount() {
-        this.setState({cout: 1});
+        this.setState({ cout: 1 });
         console.log(this.context);
     }
     render() {
@@ -124,7 +125,7 @@ class Root extends Component {
             return null;
         }
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
-            <Greeting name='ggg'/>
+            <Greeting name='ggg' />
             <br />
             {<Tabs defaultActiveKey='1' onChange={() => { }}>
                 <TabPane tab='Tab 1' key='1'>Content of Tab Pane 1</TabPane>
@@ -142,9 +143,10 @@ class Root extends Component {
             {/* <DropdownDemo /> */}
             {<SelectDemo />}
             <PaginationDemo />
+            <Me />
             {/* <TooltipDemo /> */}
             {<button onClick={() => {
-                this.setState({ name: 'root++', c: <Book long='ppp'><Q/>children</Book> });
+                this.setState({ name: 'root++', c: <Book long='ppp'>children</Book> });
             }}>update</button>}
 
         </div >;
@@ -162,7 +164,7 @@ class Book extends Component<any, any> {
         console.log('componentWillUnmount');
     }
     render() {
-        return <div ref='dom'>
+        return <div ref='dom'><Q />
             {
                 this.props.children
             }{
@@ -172,21 +174,65 @@ class Book extends Component<any, any> {
 }
 class Q extends Component {
     constructor() {
-      super();
-      this.state = {
-      };
+        super();
+        this.state = {
+        };
     }
 
     componentDidMount() {
-      console.log('componentDidMount2', this.context)
+        console.log('componentDidMount2', this.context)
     }
 
     render() {
-      return (
-        <div>
-          {this.props.name}
+        return (
+            <div>
+                123123123
         </div>
-      );
+        );
     }
-  }
+}
+
+
+
+
+class Me extends React.Component {
+    state = {
+        current: 'mail',
+    }
+    handleClick = (e) => {
+        console.log('click ', e);
+        this.setState({
+            current: e.key,
+        });
+    }
+    render() {
+        return (
+            <Menu
+                onClick={this.handleClick}
+                selectedKeys={[this.state.current]}
+                mode="horizontal"
+            >
+                <Menu.Item key="mail">
+                    <Icon type="mail" />Navigation One
+          </Menu.Item>
+                <Menu.Item key="app" disabled>
+                    <Icon type="appstore" />Navigation Two
+          </Menu.Item>
+                <SubMenu title={<span><Icon type="setting" />Navigation Three - Submenu</span>}>
+                    <MenuItemGroup title="Item 1">
+                        <Menu.Item key="setting:1">Option 1</Menu.Item>
+                        <Menu.Item key="setting:2">Option 2</Menu.Item>
+                    </MenuItemGroup>
+                    <MenuItemGroup title="Item 2">
+                        <Menu.Item key="setting:3">Option 3</Menu.Item>
+                        <Menu.Item key="setting:4">Option 4</Menu.Item>
+                    </MenuItemGroup>
+                </SubMenu>
+                <Menu.Item key="alipay">
+                    <a href="https://ant.design" target="_blank" rel="noopener noreferrer">Navigation Four - Link</a>
+                </Menu.Item>
+            </Menu>
+        );
+    }
+}
 render(<Root />, document.getElementById('root'));

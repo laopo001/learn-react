@@ -101,13 +101,9 @@ export function createComponent(Ctor, props, context) {
     let component;
     // 类形式的组件
     if (Ctor.prototype && Ctor.prototype.render) {
-        // if (Ctor.prototype.getDefaultProps) {
-        //     Ctor.defaultProps = Ctor.prototype.getDefaultProps();
-        // }
-
         let t_props = propsClone({}, Ctor.defaultProps, props);
         component = new Ctor(t_props, context);
-
+        component.constructor = Ctor;
         if (component.props == null) component.props = t_props;
         if (component.context == null) component.context = context;
         // inst.context = Object.assign({}, inst.context, inst.getChildContext());

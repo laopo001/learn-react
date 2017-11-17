@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import { Component } from './component';
-import { renderComponent } from './vdom/componentUtil';
+import { renderComponent, callDidMount } from './vdom/componentUtil';
 import { RenderMode } from './config/';
 
 let enqueue: Component[] = [];
@@ -20,11 +20,13 @@ function rerender() {
     enqueue = [];
     while (component = list.pop()) {
         renderComponent(component, RenderMode.ASYNC_RENDER, component.getChildContext(), false);
+        callDidMount();
     }
 }
 
 
 export function forceRender(component: Component) {
     renderComponent(component, RenderMode.SYNC_RENDER, component.getChildContext(), false);
+    callDidMount();
 }
 

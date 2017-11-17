@@ -56,7 +56,6 @@ export function diff(vnode: any | VNode, dom, context) {
     if (dom && dom !== out && !dom.__moveOut__) {
         dom.parentNode.replaceChild(out, dom);
         recollectNodeTree(dom, false);
-        callDidMount();
     }
     return out;
 }
@@ -116,7 +115,6 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
             } else {
                 insertAfter(newChildDOM, lastChildDom);
             }
-            callDidMount();
         }
         // else if (newChildDOM !== childDOM) {
         //     out.replaceChild(newChildDOM, childDOM);
