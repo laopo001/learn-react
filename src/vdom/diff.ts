@@ -6,6 +6,7 @@ import { removeNode, setAttribute, insertAfter } from './dom';
 import { isNamedNode, createNode, isSameNodeType } from './util';
 import { RenderComponentFromVNode, unmountComponent, renderComponent, callDidMount, findParentComponent } from './componentUtil';
 import { VNode } from '../vnode';
+import { defer } from '../rerender';
 
 export const mounts = [];
 let isSvgMode = false;
@@ -55,9 +56,13 @@ export function diff(vnode: any | VNode, dom, context) {
     }
     if (dom && dom !== out && !dom.__moveOut__) {
         dom.parentNode.replaceChild(out, dom);
-        if (findParentComponent(out, dom.__parentComponent__, 'component') == null) {
-            recollectNodeTree(dom, false);
-        }
+        dom.__moveOut__ = true;
+        defer(function () {
+            if (findParentComponent(out, dom.__parentComponent__, 'component') == null) {
+                recollectNodeTree(dom, false);
+            }
+        })
+
     }
     return out;
 }
@@ -150,8 +155,8 @@ function diffProps(props, out) {
     }
 }
 export function recollectNodeChildren(doms, isRemove) {
-    for (let i = 0; i < doms.length; i++) {
-        recollectNodeTree(doms[i], isRemove);
+    while (doms.length > 0) {
+        recollectNodeTree(doms[0], isRemove);
     }
 }
 

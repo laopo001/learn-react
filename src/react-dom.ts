@@ -6,6 +6,7 @@ import { h } from './h';
 import { Component } from './component';
 import { renderComponent, RenderComponentFromVNode, findParentComponent } from './vdom/componentUtil';
 import { RenderMode } from './config/';
+import { recollectNodeChildren } from './vdom/diff';
 
 export function findDOMNode(component: Component) {
     return component && component.__dom__ || null;
@@ -49,6 +50,7 @@ export const Children = {
 
 export function render(vnode, parent): Component {
     let dom = create(vnode, {}, parent);
+    dom.__isContainer__ = true;
     return findParentComponent(dom, vnode);
 }
 
@@ -71,7 +73,15 @@ export function renderSubtreeIntoContainer(parentComponent, vnode, container, ca
     } else {
         componentDOM = RenderComponentFromVNode(wrap, container.appended, {});
     }
-    let component = componentDOM &&  findParentComponent(componentDOM, vnode);
+    let component = componentDOM && findParentComponent(componentDOM, vnode);
     if (callback) callback.call(component, componentDOM);
     return component;
+}
+
+export function unmountComponentAtNode(dom) {
+    if (dom.__isContainer__ === true) {
+        recollectNodeChildren(dom.childNodes, true);
+    } else{
+        console.error('不是容器');
+    }
 }
