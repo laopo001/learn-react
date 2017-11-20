@@ -34,6 +34,7 @@ export function isSameNodeType(node, vnode, hydrating) {
     return hydrating || node._componentConstructor === vnode.nodeName;
 }
 
+// 和Object.assign不同，如果value为null，不会拷贝
 export function propsClone(target, defaultProps, source, out = false): Object {
     const res = {};
     if (out === true) {

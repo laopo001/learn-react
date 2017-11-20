@@ -4,7 +4,7 @@
 import { KEY, RenderMode } from '../config/';
 import { removeNode, setAttribute, insertAfter } from './dom';
 import { isNamedNode, createNode, isSameNodeType } from './util';
-import { RenderComponentFromVNode, unmountComponent, renderComponent, callDidMount } from './componentUtil';
+import { RenderComponentFromVNode, unmountComponent, renderComponent, callDidMount, findParentComponent } from './componentUtil';
 import { VNode } from '../vnode';
 
 export const mounts = [];
@@ -55,7 +55,9 @@ export function diff(vnode: any | VNode, dom, context) {
     }
     if (dom && dom !== out && !dom.__moveOut__) {
         dom.parentNode.replaceChild(out, dom);
-        recollectNodeTree(dom, false);
+        if (findParentComponent(out, dom.__parentComponent__, 'component') == null) {
+            recollectNodeTree(dom, false);
+        }
     }
     return out;
 }
@@ -68,10 +70,12 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
     let keyObj = {}, keyObjLen = 0, domArr = [];
 
     for (let i = 0; i < domChildren.length; i++) {
-        domArr.push(domChildren[i]);
-        let key = domChildren[i].__key__;
-        if (key !== undefined) {
-            keyObj[key] = domChildren[i];
+        const childDOM = domChildren[i];
+        if (childDOM && !('__key__' in childDOM)) { continue; }
+        domArr.push(childDOM);
+        let key = childDOM.__key__;
+        if (key != null) {
+            keyObj[key] = childDOM;
             keyObjLen++;
         }
     }
@@ -82,11 +86,13 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
         let child = vnodeChildren[i];
         // if (child instanceof VNode) (child as any).component = out.component;
         let childDOM = domArr[j];
+
         let newChildDOM;
         if (child == null) {
             newChildDOM = document.createTextNode('');
+            newChildDOM.__key__ = null;
         } else {
-            let uuid;
+            let uuid = null;
             if (child.key != null) {
                 uuid = child.key + ',' + child.group;
                 while (childDOM && childDOM.__key__ !== undefined) {
@@ -109,18 +115,11 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
                 let first = out.childNodes[0];
                 if (first == null) { out.appendChild(newChildDOM); }
                 else { out.insertBefore(newChildDOM, first); }
-                // if (child instanceof VNode && typeof child.name === 'function') {
 
-                // }
             } else {
-                insertAfter(newChildDOM, lastChildDom);
+                insertAfter(newChildDOM, lastChildDom, out);
             }
         }
-        // else if (newChildDOM !== childDOM) {
-        //     out.replaceChild(newChildDOM, childDOM);
-        //     recollectNodeTree(childDOM, false);
-        // }
-
 
         lastChildDom = newChildDOM;
         j++;

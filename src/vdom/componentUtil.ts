@@ -56,7 +56,7 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     if (vnode != null) {
         vnode.childrenRef_bind(component);
     }
-    let nextContext = Object.assign({}, component.context, context);
+    let nextContext = Object.assign({}, component.context, component.getChildContext());
     let dom = diff(vnode, component.__dom__, nextContext);
     component.__dom__ = dom;
     setParentComponent(dom, component);
@@ -81,20 +81,37 @@ export function setParentComponent(dom, component: Component) {
     }
 }
 
-export function findParentComponent(dom, vnode: VNode): Component | null {
+export function findParentComponent(dom, vnode: VNode , type = 'vnode'): Component | null {
     if (dom == null) {
         return null;
-    } else if (dom.__parentComponent__ == null) {
-        return null;
-    } else {
-        let c = dom.__parentComponent__;
-        if (c.constructor === vnode.name) { return c; }
-        while (c.__parentComponent__) {
-            c = c.__parentComponent__;
-            if (c.constructor === vnode.name) { return c; }
-        }
-        return null;
     }
+    if (type === 'vnode') {
+        if (dom.__parentComponent__ == null) {
+            return null;
+        } else {
+            let c = dom.__parentComponent__;
+            if (c.constructor === vnode.name) { return c; }
+            while (c.__parentComponent__) {
+                c = c.__parentComponent__;
+                if (c.constructor === vnode.name) { return c; }
+            }
+            return null;
+        }
+    } else {
+        const component = vnode as any;
+        if (dom.__parentComponent__ == null) {
+            return null;
+        } else {
+            let c = dom.__parentComponent__;
+            if (c === component) { return c; }
+            while (c.__parentComponent__) {
+                c = c.__parentComponent__;
+                if (c === component) { return c; }
+            }
+            return null;
+        }
+    }
+
 }
 
 export function createComponent(Ctor, props, context) {
@@ -106,7 +123,6 @@ export function createComponent(Ctor, props, context) {
         component.constructor = Ctor;
         if (component.props == null) component.props = t_props;
         if (component.context == null) component.context = context;
-        // inst.context = Object.assign({}, inst.context, inst.getChildContext());
         if (component.__new__ === undefined) {
             component.__new__ = { state: {} };
         }
@@ -125,8 +141,7 @@ export function createComponent(Ctor, props, context) {
 export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
     let component: Component = findParentComponent(dom, vnode);
     if (component && component.constructor === vnode.name) {
-
-        component.__new__.props = propsClone(component.props, vnode.name.defaultProps, vnode.props, true);
+        component.__new__.props = propsClone({}, vnode.name.defaultProps, vnode.props);
         component.__new__.context = Object.assign({}, component.context, context);
         component.__new__.direct = true;
         component.componentWillReceiveProps(component.__new__.props, component.__new__.context);
@@ -135,7 +150,7 @@ export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
             vnode.props.ref(component);
             delete vnode.props.ref;
         }
-        return renderComponent(component, RenderMode.ASYNC_RENDER, component.getChildContext(), false);
+        return renderComponent(component, RenderMode.ASYNC_RENDER, context, false);
     } else {
 
         let component: Component = createComponent(vnode.name, vnode.props, context);
@@ -145,7 +160,7 @@ export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
             vnode.props.ref(component);
             delete vnode.props.ref;
         }
-        return renderComponent(component, RenderMode.ASYNC_RENDER, component.getChildContext(), true);
+        return renderComponent(component, RenderMode.ASYNC_RENDER, context, true);
     }
 }
 

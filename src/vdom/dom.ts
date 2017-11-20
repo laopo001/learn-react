@@ -26,11 +26,20 @@ export function setAttribute(dom, name, value, oldvalue) {
             dom.style.cssText = value || '';
         }
         if (value && typeof value === 'object') {
-            if (typeof oldvalue !== 'string') {
-                for (let i in oldvalue) if (!(i in value)) dom.style[i] = '';
+            const keys = {};
+            if (typeof oldvalue === 'object') {
+                for (let key in oldvalue) {
+                    if (key in value) {
+                        if (oldvalue[key] === value[key]) keys[key] = true;
+                    } else {
+                        dom.style[key] = '';
+                    }
+                }
             }
-            for (let i in value) {
-                dom.style[i] = typeof value[i] === 'number' && IS_NON_DIMENSIONAL.test(i) === false ? (value[i] + 'px') : value[i];
+            for (let key in value) {
+                if (keys[key] !== true) {
+                    dom.style[key] = typeof value[key] === 'number' && IS_NON_DIMENSIONAL.test(key) === false ? (value[key] + 'px') : value[key];
+                }
             }
         }
     } else if (name === 'dangerouslySetInnerHTML') {
@@ -47,6 +56,7 @@ export function setAttribute(dom, name, value, oldvalue) {
         (dom._listeners || (dom._listeners = {}))[name] = value;
     } else if (name in dom) {
         try {
+            // 有些属性不能设置到dom上。
             dom[name] = value || '';
             if (value == null || value === false) dom.removeAttribute(name);
         } catch (e) {
@@ -62,8 +72,8 @@ function eventProxy(e) {
     return this._listeners[e.type](options.event && options.event(e) || e);
 }
 
-export function insertAfter(newEl, targetEl) {
-    const parentEl = targetEl.parentNode;
+export function insertAfter(newEl, targetEl, out?) {
+    const parentEl = out == null ? targetEl.parentNode : out;
 
     if (parentEl.lastChild === targetEl) {
         parentEl.appendChild(newEl);
