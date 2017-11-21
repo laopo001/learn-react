@@ -16,6 +16,7 @@ export abstract class Component {
         state: {},
         direct: false
     };
+    __parentComponent__: Component;
     state: any = {};
     refs: any = {};
     private _renderCallbacks = [];
@@ -41,6 +42,20 @@ export abstract class Component {
             this.__new__.state = Object.assign({}, this.state, state);
             if (callback) this._renderCallbacks.push(callback);
         }
+
+    }
+    replaceState(state, callback?) {
+        // if (typeof state === 'function') {
+        //     state = state(this.state);
+        // }
+        // if (this.__new__.direct === false) {
+        //     this.__new__.state = Object.assign(this.__new__.state, state);
+        //     if (callback) this._renderCallbacks.push(callback);
+        //     enqueueRender(this);
+        // } else {
+        //     this.__new__.state = Object.assign({}, this.state, state);
+        //     if (callback) this._renderCallbacks.push(callback);
+        // }
 
     }
     forceUpdate(callback) {

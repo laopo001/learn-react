@@ -13,30 +13,23 @@ export let DidMounts = [];
 
 
 export function callDidMount() {
-    if (callDidMount['isFirstCreate']) return;
     DidMounts.forEach(c => {
         c.componentDidMount();
     });
     DidMounts = [];
 }
-callDidMount['isFirstCreate'] = true;
 
 
 export function renderComponent(component: Component, opts: RenderMode, context, isCreate: boolean) {
     let old = { state: component.state, props: component.props, context: component.context };
-    // let newObj = {
-    //     state: Object.assign({}, component.state, component.__new__.state),
-    //     props: component.__new__.props === undefined ? component.props : component.__new__.props,
-    //     context: component.__new__.context === undefined ? component.context : component.__new__.context,
-    // };
+
     if (isCreate) {
 
         component.__new__.direct = true;
         component.componentWillMount();
         component.__new__.direct = false;
         component.state = Object.assign({}, component.state, component.__new__.state);
-        // component.props = component.__new__.props === undefined ? component.props : component.__new__.props;
-        // component.context = component.__new__.context === undefined ? component.context : component.__new__.context;
+
     } else {
         let newObj = {
             state: Object.assign({}, component.state, component.__new__.state),
@@ -81,7 +74,7 @@ export function setParentComponent(dom, component: Component) {
     }
 }
 
-export function findParentComponent(dom, vnode: VNode , type = 'vnode'): Component | null {
+export function findParentComponent(dom, vnode: VNode, type = 'vnode'): Component | null {
     if (dom == null) {
         return null;
     }
@@ -89,7 +82,7 @@ export function findParentComponent(dom, vnode: VNode , type = 'vnode'): Compone
         if (dom.__parentComponent__ == null) {
             return null;
         } else {
-            let c = dom.__parentComponent__;
+            let c: Component = dom.__parentComponent__;
             if (c.constructor === vnode.name) { return c; }
             while (c.__parentComponent__) {
                 c = c.__parentComponent__;

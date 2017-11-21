@@ -12,10 +12,8 @@ export const mounts = [];
 let isSvgMode = false;
 
 export function create(vnode: VNode, context, parent) {
-    callDidMount['isFirstCreate'] = true;
     let ret = diff(vnode, null, context);
     if (parent) parent.appendChild(ret);
-    callDidMount['isFirstCreate'] = false;
     callDidMount();
     return ret;
 }
@@ -56,13 +54,12 @@ export function diff(vnode: any | VNode, dom, context) {
     }
     if (dom && dom !== out && !dom.__moveOut__) {
         dom.parentNode.replaceChild(out, dom);
-        dom.__moveOut__ = true;
-        defer(function () {
-            if (findParentComponent(out, dom.__parentComponent__, 'component') == null) {
-                recollectNodeTree(dom, false);
-            }
-        })
-
+        if (dom.__render__) {
+            dom.__moveOut__ = true;
+            delete dom.__render__;
+        } else {
+            recollectNodeTree(dom, false);
+        }
     }
     return out;
 }
@@ -155,9 +152,16 @@ function diffProps(props, out) {
     }
 }
 export function recollectNodeChildren(doms, isRemove) {
-    while (doms.length > 0) {
-        recollectNodeTree(doms[0], isRemove);
+    if (isRemove) {
+        while (doms.length > 0) {
+            recollectNodeTree(doms[0], isRemove);
+        }
+    } else {
+        for (let i = 0; i < doms.childNodes; i++) {
+            recollectNodeTree(doms[i], isRemove);
+        }
     }
+
 }
 
 export function recollectNodeTree(dom, isRemove) {
