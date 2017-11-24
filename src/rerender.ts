@@ -26,6 +26,10 @@ function rerender() {
             component.__parentComponent__.__dom__ = out;
             component = component.__parentComponent__;
         }
+        if (component._renderCallbacks != null) {
+            while (component._renderCallbacks.length) component._renderCallbacks.pop().call(component);
+        }
+
         callDidMount();
     }
 }

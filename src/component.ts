@@ -19,7 +19,7 @@ export abstract class Component {
     __parentComponent__: Component;
     state: any = {};
     refs: any = {};
-    private _renderCallbacks = [];
+    public _renderCallbacks = [];
     // private _dirty = true;
     // get dirty() {
     //     return this._dirty;
@@ -32,15 +32,16 @@ export abstract class Component {
     }
     setState(state, callback?) {
         if (typeof state === 'function') {
-            state = state(this.state);
+            state = state(this.state, this.props);
         }
         if (this.__new__.direct === false) {
             this.__new__.state = Object.assign(this.__new__.state, state);
-            if (callback) this._renderCallbacks.push(callback);
+            if (callback) (this._renderCallbacks = (this._renderCallbacks || [])).push(callback);
             enqueueRender(this);
         } else {
-            this.__new__.state = Object.assign({}, this.state, state);
-            if (callback) this._renderCallbacks.push(callback);
+            this.__new__.state = Object.assign(this.__new__.state, state);
+            // this.__new__.state = Object.assign({}, this.state, state);
+            if (callback) (this._renderCallbacks = (this._renderCallbacks || [])).push(callback);
         }
 
     }

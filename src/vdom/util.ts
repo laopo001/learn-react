@@ -54,3 +54,8 @@ export function propsClone(target, defaultProps, source, out = false): Object {
     return target;
 }
 
+
+export function extend(obj, props) {
+    for (let i in props) obj[i] = props[i];
+    return obj;
+}

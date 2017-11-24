@@ -32,6 +32,7 @@ export function diff(vnode: any | VNode, dom, context) {
             }
             diffProps(vnode.props, out);
             out.oldVNode = vnode;
+            out[KEY] = true;
         } else if (typeof vnode.name === 'function') {
             out = RenderComponentFromVNode(vnode, dom, context);
         }
@@ -54,7 +55,7 @@ export function diff(vnode: any | VNode, dom, context) {
     }
     if (dom && dom !== out && !dom.__moveOut__) {
         dom.parentNode.replaceChild(out, dom);
-        if (dom.__render__) {
+        if (dom.__render__ === true) {
             dom.__moveOut__ = true;
             delete dom.__render__;
         } else {
@@ -73,7 +74,7 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
 
     for (let i = 0; i < domChildren.length; i++) {
         const childDOM = domChildren[i];
-        if (childDOM && !('__key__' in childDOM)) { continue; }
+        if (childDOM && !(KEY in childDOM)) { continue; }
         domArr.push(childDOM);
         let key = childDOM.__key__;
         if (key != null) {
@@ -91,10 +92,9 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
 
         let newChildDOM;
         if (child == null) {
-            newChildDOM = document.createTextNode('');
-            newChildDOM.__key__ = null;
+            newChildDOM = diff(child, childDOM, context);
         } else {
-            let uuid = null;
+            let uuid;
             if (child.key != null) {
                 uuid = child.key + ',' + child.group;
                 while (childDOM && childDOM.__key__ !== undefined) {
@@ -110,7 +110,7 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
                 j--;
             }
             newChildDOM = diff(child, childDOM, context);
-            newChildDOM.__key__ = uuid;
+            if (child.key != null) newChildDOM.__key__ = uuid;
         }
         if (childDOM == null) {
             if (lastChildDom == null) {
@@ -165,6 +165,7 @@ export function recollectNodeChildren(doms, isRemove) {
 }
 
 export function recollectNodeTree(dom, isRemove) {
+    if (dom.__moveOut__) { return; }
     if (dom.__parentComponent__ != null) {
         let c = dom.__parentComponent__;
         unmountComponent(c);

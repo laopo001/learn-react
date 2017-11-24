@@ -100,7 +100,7 @@ const Es5 = React.createClass({
 const Greeting = createReactClass({
     componentDidMount() {
         this.setState({ cout: 1 });
-    }
+    },
     render: function () {
         return <h1>Hello, {this.props.name}</h1>;
     }

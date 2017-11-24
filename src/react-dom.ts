@@ -9,10 +9,18 @@ import { RenderMode } from './config/';
 import { recollectNodeChildren } from './vdom/diff';
 
 export function findDOMNode(component: Component) {
-    return component && component.__dom__ || null;
+    if (component instanceof Component || (component && (component as any).__dom__)) {
+        return component.__dom__ || null;
+    } else if (component as any instanceof HTMLElement) {
+        return component;
+    } else {
+        if (component != null) {
+            console.error(component);
+        }
+    }
 }
 
-const ARR = [];
+
 export const Children = {
     map(children, fn, ctx) {
         if (children == null) return null;
@@ -42,8 +50,12 @@ export const Children = {
         return children[0];
     },
     toArray(children) {
-        if (children == null) return [];
-        return ARR.concat(children);
+        if (children == null) { return []; }
+        if (children.constructor === Array) {
+            return children;
+        } else {
+            return [children];
+        }
     }
 };
 
@@ -81,7 +93,7 @@ export function renderSubtreeIntoContainer(parentComponent, vnode, container, ca
 export function unmountComponentAtNode(dom) {
     if (dom.__isContainer__ === true) {
         recollectNodeChildren(dom.childNodes, true);
-    } else{
+    } else {
         console.error('不是容器');
     }
 }
