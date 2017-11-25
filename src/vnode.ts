@@ -7,20 +7,19 @@ export class VNode {
     type;
     group: number;
     parentComponent: Component;
-    constructor(public name, public props, children) {
+    constructor(public name, public props, children?) {
         this.props = this.props == null ? {} : this.props;
         this.key = this.props.key;
         this.type = name;
-        if (children.length === 1) {
-            this.props.children = children[0];
-        } else if (children.length > 1) {
-            this.props.children = children;
+        if (children) {
+            if (children.length === 0) {
+                this.props.children = children;
+            } else if (children.length === 1) {
+                this.props.children = children[0];
+            } else if (children.length > 1) {
+                this.props.children = children;
+            }
         }
-        // switch (children.length) {
-        //     // case 0: this.props.children = undefined; break;
-        //     case 1: this.props.children = children[0]; break;
-        //     case 2: this.props.children = children; break;
-        // }
     }
     get children() {
         if (this.props.children == null) { return []; }

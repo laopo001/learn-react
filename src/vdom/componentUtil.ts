@@ -13,10 +13,14 @@ export let DidMounts = [];
 
 
 export function callDidMount() {
-    DidMounts.forEach(c => {
-        c.componentDidMount();
-    });
-    DidMounts = [];
+    let component;
+    while (component = DidMounts.pop()) {
+        component.componentDidMount();
+    }
+    // DidMounts.forEach(c => {
+    //     c.componentDidMount();
+    // });
+    // DidMounts = [];
 }
 
 
@@ -29,6 +33,8 @@ export function renderComponent(component: Component, opts: RenderMode, context,
         component.componentWillMount();
         component.__new__.direct = false;
         component.state = Object.assign({}, component.state, component.__new__.state);
+
+        DidMounts.push(component);
 
     } else {
         let newObj = {
@@ -53,9 +59,7 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     let dom = diff(vnode, component.__dom__, nextContext);
     component.__dom__ = dom;
     setParentComponent(dom, component);
-    if (isCreate) {
-        DidMounts.push(component);
-    } else {
+    if (!isCreate) {
         component.componentDidUpdate && component.componentDidUpdate(old.props, old.state, old.context);
     }
     return dom;
