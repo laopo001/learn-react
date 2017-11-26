@@ -38,7 +38,7 @@ export const Children = {
     },
     count(children) {
         if (children == null) { return 0; }
-        else if (children.constructor === Array) {
+        else if (Array.isArray(children)) {
             return children.length;
         } else {
             return 1;
@@ -51,7 +51,7 @@ export const Children = {
     },
     toArray(children) {
         if (children == null) { return []; }
-        if (children.constructor === Array) {
+        if (Array.isArray(children)) {
             return children;
         } else {
             return [children];

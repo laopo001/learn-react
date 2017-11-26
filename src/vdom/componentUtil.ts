@@ -78,46 +78,31 @@ export function setParentComponent(dom, component: Component) {
     }
 }
 
-export function findParentComponent(dom, vnode: VNode, type = 'vnode'): Component | null {
+export function findParentComponent(dom, vnode: VNode): Component | null {
     if (dom == null) {
         return null;
     }
-    if (type === 'vnode') {
-        if (dom.__parentComponent__ == null) {
-            return null;
-        } else {
-            let c: Component = dom.__parentComponent__;
-            if (c.constructor === vnode.name) { return c; }
-            while (c.__parentComponent__) {
-                c = c.__parentComponent__;
-                if (c.constructor === vnode.name) { return c; }
-            }
-            return null;
-        }
+    if (dom.__parentComponent__ == null) {
+        return null;
     } else {
-        const component = vnode as any;
-        if (dom.__parentComponent__ == null) {
-            return null;
-        } else {
-            let c = dom.__parentComponent__;
-            if (c === component) { return c; }
-            while (c.__parentComponent__) {
-                c = c.__parentComponent__;
-                if (c === component) { return c; }
-            }
-            return null;
+        let c: Component = dom.__parentComponent__;
+        if (c.constructor === vnode.name) { return c; }
+        while (c.__parentComponent__) {
+            c = c.__parentComponent__;
+            if (c.constructor === vnode.name) { return c; }
         }
+        return null;
     }
-
 }
 
 export function createComponent(Ctor, props, context) {
     let component;
     // 类形式的组件
-    if (Ctor.prototype && Ctor.prototype.render) {
+    if (Ctor.prototype && Ctor.prototype.render && !Ctor.prototype.isStatelessComponent) {
         let t_props = propsClone({}, Ctor.defaultProps, props);
         component = new Ctor(t_props, context);
-        component.constructor = Ctor;
+        // component.constructor = Ctor;
+        component.__proto__.constructor = Ctor;
         if (component.props == null) component.props = t_props;
         if (component.context == null) component.context = context;
         if (component.__new__ === undefined) {
@@ -126,12 +111,23 @@ export function createComponent(Ctor, props, context) {
 
     } else {
         // 无状态组件
+
         class StatelessComponent extends Component {
             render() { }
         }
-        component = new StatelessComponent(props, context);
-        component.constructor = Ctor;
-        component.render = component.constructor;
+        let t_props = propsClone({}, Ctor.defaultProps, props);
+
+        Ctor.prototype = new StatelessComponent(t_props, context)
+        Ctor.prototype.render = Ctor;
+        Ctor.prototype.constructor = Ctor;
+        Ctor.prototype.isStatelessComponent = true;
+
+        component = {}
+        component.__proto__ = Ctor.prototype
+        Ctor.call(component, t_props, context)
+        // component.constructor = Ctor;
+        // component.__proto__.constructor = Ctor;
+        // component.render = Ctor;
     }
     return component;
 }

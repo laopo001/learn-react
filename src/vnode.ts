@@ -23,7 +23,7 @@ export class VNode {
     }
     get children() {
         if (this.props.children == null) { return []; }
-        if (this.props.children.constructor === Array) {
+        if (Array.isArray(this.props.children)) {
             return this.props.children;
         } else {
             return [this.props.children];

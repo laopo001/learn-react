@@ -5,7 +5,7 @@
 const EMPTY_CHILDREN = [];
 import { VNode } from './vnode';
 import { Component } from './component';
-export function h(nodeName: string | Function, props) {
+export function h(nodeName: string | Function, props, children?) {
 
 
     if (props && 'ref' in props && typeof props['ref'] === 'string') {
@@ -15,6 +15,7 @@ export function h(nodeName: string | Function, props) {
             this.refs[old] = x;
         };
         props['ref'].funcName = '__ref_string__';
+        props['ref'].refName = old;
     }
     let indexT = 0;
     if (arguments.length > 2) {
@@ -28,7 +29,7 @@ export function h(nodeName: string | Function, props) {
             if (typeof arguments[i] === 'boolean') {
                 // children[i] = null;
                 children.push(null);
-            } else if (arguments[i] && arguments[i].constructor === Array) {
+            } else if (Array.isArray(arguments[i])) {
                 // let temp = i;
                 // let lastConstructor;
                 arguments[i].forEach((x, index) => {
