@@ -22,14 +22,13 @@ function rerender() {
         component.__dom__['__render__'] = true;
         let out = renderComponent(component, RenderMode.ASYNC_RENDER, component.context, false);
         component.__dom__ = out;
+        if (component._renderCallbacks != null) {
+            while (component._renderCallbacks.length) component._renderCallbacks.pop().call(component);
+        }
         while (component.__parentComponent__) {
             component.__parentComponent__.__dom__ = out;
             component = component.__parentComponent__;
         }
-        if (component._renderCallbacks != null) {
-            while (component._renderCallbacks.length) component._renderCallbacks.pop().call(component);
-        }
-
         callDidMount();
     }
 }
