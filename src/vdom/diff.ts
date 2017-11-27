@@ -129,11 +129,11 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
         lastChildDom = newChildDOM;
 
     }
-    if (domArr.length > 0 && j < domArr.length && domArr[j].__key__ != null) {
-        for (let i = j; i < domArr.length; i++) {
-            recollectNodeTree(domArr[i], true);
-        }
+
+    for (let i = j; i < domArr.length; i++) {
+        recollectNodeTree(domArr[i], true);
     }
+
     for (let x in keyObj) {
         if (keyObj[x] != null) {
             recollectNodeTree(keyObj[x], true);
