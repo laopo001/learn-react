@@ -2,7 +2,14 @@
  * @author dadigua
  */
 import { IS_NON_DIMENSIONAL } from '../config/';
-const options: any = {};
+const options: any = {
+    event(e) {
+        e.persist = Object;
+        e.nativeEvent = e;
+        return e;
+    }
+
+};
 
 export function removeNode(node) {
     let parentNode = node.parentNode;
@@ -10,7 +17,8 @@ export function removeNode(node) {
 }
 
 
-export function setAttribute(dom, name, value, oldvalue) {
+export function setAttribute(dom, name, value, prevProps, nextProps) {
+    let oldvalue = prevProps[name];
     if (name === 'className') name = 'class';
     if (name === 'key') {
         dom.setAttribute(name, value);
@@ -48,6 +56,7 @@ export function setAttribute(dom, name, value, oldvalue) {
         let useCapture = name !== (name = name.replace(/Capture$/, ''));
         name = name.toLowerCase().substring(2);
         if (value) {
+            if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change')  { name = 'input'; }
             if (!oldvalue) dom.addEventListener(name, eventProxy, useCapture);
         }
         else {
@@ -69,6 +78,7 @@ export function setAttribute(dom, name, value, oldvalue) {
 
 
 function eventProxy(e) {
+
     return this._listeners[e.type](options.event && options.event(e) || e);
 }
 

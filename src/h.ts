@@ -5,6 +5,8 @@
 const EMPTY_CHILDREN = [];
 import { VNode } from './vnode';
 import { Component } from './component';
+import { propsClone } from './vdom/util';
+
 export function h(nodeName: string | Function, props, children?) {
 
 
@@ -17,9 +19,9 @@ export function h(nodeName: string | Function, props, children?) {
         props['ref'].funcName = '__ref_string__';
         props['ref'].refName = old;
     }
-    let indexT = 0;
+    let obj = { index: 0 };
     if (arguments.length > 2) {
-        const children = []
+        const children = [];
         for (let i = 2; i < arguments.length; i++) {
             // if (children[i] == null || children[i] === '') {
             //     children.splice(i, 1);
@@ -30,24 +32,10 @@ export function h(nodeName: string | Function, props, children?) {
                 // children[i] = null;
                 children.push(null);
             } else if (Array.isArray(arguments[i])) {
-                // let temp = i;
-                // let lastConstructor;
-                arguments[i].forEach((x, index) => {
-                    // if (x.constructor === lastConstructor && x.key == null) {
-                    //     //  console.warn('key');
-                    // }
-                    // lastConstructor = x.constructor;
-                    // x.uuid = x.key + ',' + indexT;
-                    if (x instanceof VNode) {
-                        x.group = indexT;
-                    }
-                    children.push(x);
-                    // children.splice(i + index + 1, 0, x);
-                });
-                indexT++;
-                // children.splice(temp, 1);
+                runArray(arguments[i], children, obj);
+
             } else {
-                children.push(arguments[i])
+                children.push(arguments[i]);
             }
 
         }
@@ -55,24 +43,30 @@ export function h(nodeName: string | Function, props, children?) {
     } else {
         return new VNode(nodeName, props);
     }
-
 }
+function runArray(arr, children, obj) {
+    arr.forEach((x, index) => {
+        if (Array.isArray(x)) {
+            obj.index++;
+            runArray(x, children, obj);
+            return;
+        } else if (x instanceof VNode) {
+            x.group = obj.index;
+        } else if (typeof x === 'boolean') {
+            x = null;
+        }
+        children.push(x);
+
+    });
+    obj.index++;
+}
+
 
 export function cloneElement(vnode, props) {
     if (!(vnode instanceof VNode)) { console.error('输入不是一个VNode类型'); return; }
     arguments[0] = vnode.name;
-    arguments[1] = Object.assign({}, vnode.props, arguments[1]);
-    return h.apply(null, arguments)
-    // if (arguments.length > 2) {
-    //     return h.apply(null, [vnode.name, props, ...[].slice.call(arguments, 2)])
-    // } else {
-    //     return h(vnode.name, props);
-    // }
-    // return h(
-    //     vnode.name,
-    //     Object.assign({}, vnode.props, props),
-    //     arguments.length > 2 ? [].slice.call(arguments, 2) : vnode.children
-    // );
+    arguments[1] = propsClone({}, vnode.props, arguments[1]);
+    return h.apply(null, arguments);
 }
 
 export function isValidElement(element) {

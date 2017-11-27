@@ -9,15 +9,7 @@ import { RenderMode } from './config/';
 import { recollectNodeChildren } from './vdom/diff';
 
 export function findDOMNode(component: Component) {
-    if (component instanceof Component || (component && (component as any).__dom__)) {
-        return component.__dom__ || null;
-    } else if (component as any instanceof HTMLElement) {
-        return component;
-    } else {
-        if (component != null) {
-            console.error(component);
-        }
-    }
+    return component && component.__dom__ || component;
 }
 
 

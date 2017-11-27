@@ -51,6 +51,7 @@ export function renderComponent(component: Component, opts: RenderMode, context,
         component.context = newObj.context;
 
     }
+
     let vnode: VNode = component.render(component.props, component.context);
     if (vnode != null) {
         vnode.childrenRef_bind(component);
@@ -122,9 +123,9 @@ export function createComponent(Ctor, props, context) {
         Ctor.prototype.constructor = Ctor;
         Ctor.prototype.isStatelessComponent = true;
 
-        component = {}
-        component.__proto__ = Ctor.prototype
-        Ctor.call(component, t_props, context)
+        component = {};
+        component.__proto__ = Ctor.prototype;
+        Ctor.call(component, t_props, context);
         // component.constructor = Ctor;
         // component.__proto__.constructor = Ctor;
         // component.render = Ctor;
@@ -134,24 +135,24 @@ export function createComponent(Ctor, props, context) {
 export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
     let component: Component = findParentComponent(dom, vnode);
     if (component && component.constructor === vnode.name) {
+        if (vnode.props.ref) {
+            vnode.props.ref(component);
+            delete vnode.props.ref;
+        }
         component.__new__.props = propsClone({}, vnode.name.defaultProps, vnode.props);
         component.__new__.context = Object.assign({}, component.context, context);
         component.__new__.direct = true;
         component.componentWillReceiveProps(component.__new__.props, component.__new__.context);
         component.__new__.direct = false;
-        if (vnode.props.ref) {
-            vnode.props.ref(component);
-            delete vnode.props.ref;
-        }
+
         return renderComponent(component, RenderMode.ASYNC_RENDER, context, false);
     } else {
 
         let component: Component = createComponent(vnode.name, vnode.props, context);
-
         // 如果 props绑定ref
         if (vnode.props.ref) {
             vnode.props.ref(component);
-            delete vnode.props.ref;
+            delete component.props.ref;
         }
         return renderComponent(component, RenderMode.ASYNC_RENDER, context, true);
     }

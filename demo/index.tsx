@@ -125,6 +125,7 @@ class Root extends Component {
             return null;
         }
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
+            <input onChange={(e) => { console.log(e); }} />
             <Greeting name='ggg' />
             <br />
             {<Tabs defaultActiveKey='1' onChange={() => { }}>

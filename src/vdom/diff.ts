@@ -39,7 +39,8 @@ export function diff(vnode: any | VNode, dom, context) {
 
 
     } else {
-        if (vnode == null || typeof vnode === 'boolean' || typeof vnode === 'object') {
+        if (typeof vnode === 'boolean' || Array.isArray(vnode)) { throw (new Error('类型错误')); }
+        if (vnode == null || typeof vnode === 'object') {
             vnode = '';
         }
         if (typeof vnode === 'string' || typeof vnode === 'number') {
@@ -75,11 +76,12 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
     for (let i = 0; i < domChildren.length; i++) {
         const childDOM = domChildren[i];
         if (childDOM && !(KEY in childDOM)) { continue; }
-        domArr.push(childDOM);
         let key = childDOM.__key__;
         if (key != null) {
             keyObj[key] = childDOM;
             keyObjLen++;
+        } else {
+            domArr.push(childDOM);
         }
     }
     let j = 0;
@@ -88,30 +90,31 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
 
         let child = vnodeChildren[i];
         // if (child instanceof VNode) (child as any).component = out.component;
-        let childDOM = domArr[j];
+        let childDOM;
 
-        let newChildDOM;
-        if (child == null) {
-            newChildDOM = diff(child, childDOM, context);
-        } else {
-            let uuid;
-            if (child.key != null) {
-                uuid = child.key + ',' + child.group;
-                while (childDOM && childDOM.__key__ !== undefined) {
-                    j++;
-                    childDOM = domArr[j];
-                }
-                if (keyObj[uuid] !== undefined) {
-                    childDOM = keyObj[uuid];
-                    keyObj[uuid] = null;
-                } else {
-                    childDOM = null;
-                }
-                j--;
+        let newChildDOM, uuid;
+
+
+        if (child && child.key != null) {
+            uuid = child.key + ',' + child.group;
+            // while (childDOM && childDOM.__key__ !== undefined) {
+            //     j++;
+            // }
+            if (keyObj[uuid] !== undefined) {
+                childDOM = keyObj[uuid];
+                keyObj[uuid] = null;
+            } else {
+                childDOM = null;
             }
-            newChildDOM = diff(child, childDOM, context);
-            if (child.key != null) newChildDOM.__key__ = uuid;
+
+        } else {
+            childDOM = domArr[j];
+            j++;
         }
+
+        newChildDOM = diff(child, childDOM, context);
+        if (child && child.key != null) { newChildDOM.__key__ = uuid; }
+
         if (childDOM == null) {
             if (lastChildDom == null) {
                 let first = out.childNodes[0];
@@ -124,7 +127,7 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
         }
 
         lastChildDom = newChildDOM;
-        j++;
+
     }
     if (domArr.length > 0 && j < domArr.length && domArr[j].__key__ != null) {
         for (let i = j; i < domArr.length; i++) {
@@ -144,7 +147,7 @@ function diffProps(props, out) {
     for (let name in props) {
         if (name === 'children') continue;
         if (out && out[name] !== props[name]) {
-            setAttribute(out, name, props[name], oldProps[name]);
+            setAttribute(out, name, props[name], oldProps, props);
         }
         if (out.oldVNode && !(name in oldProps)) {
             out.removeAttribute(name);

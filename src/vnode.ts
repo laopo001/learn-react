@@ -4,7 +4,12 @@
 import { Component } from './component';
 export class VNode {
     key;
-    type;
+    get type() {
+        return this.name;
+    }
+    set type(x) {
+        this.name = x;
+    }
     group: number;
     parentComponent: Component;
     constructor(public name, public props, children?) {
