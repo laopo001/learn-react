@@ -10,7 +10,10 @@ const options: any = {
     }
 
 };
-
+const events = {
+    focus: 'focusin',
+    blur: 'focusout'
+};
 export function removeNode(node) {
     let parentNode = node.parentNode;
     if (parentNode) parentNode.removeChild(node);
@@ -56,8 +59,16 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
         let useCapture = name !== (name = name.replace(/Capture$/, ''));
         name = name.toLowerCase().substring(2);
         if (value) {
-            if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change')  { name = 'input'; }
-            if (!oldvalue) dom.addEventListener(name, eventProxy, useCapture);
+
+            if (!oldvalue) {
+                if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change') {
+                    name = 'input';
+                }
+                if (name in events && !useCapture) {
+                    name = events[name];
+                }
+                dom.addEventListener(name, eventProxy, useCapture);
+            }
         }
         else {
             dom.removeEventListener(name, eventProxy, useCapture);
