@@ -5,12 +5,13 @@ import React, { Component, render } from 'react';
 import * as createReactClass from 'create-react-class';
 
 
-import { Pagination, Button, Icon, Affix, Breadcrumb, Menu, Dropdown, Select, Tooltip, Tabs } from 'antd';
+import { Pagination, Button, Icon, Affix, Breadcrumb, Menu, Dropdown, Select, Tooltip, Tabs, Mention } from 'antd';
 const SubMenu = Menu.SubMenu;
 const MenuItemGroup = Menu.ItemGroup;
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
-
+const { toString, toContentState } = Mention;
+import { Editor, EditorState } from 'draft-js';
 function ButtonDemo(props) {
     return <Button>123123</Button>；
 }
@@ -105,7 +106,33 @@ const Greeting = createReactClass({
         return <h1>Hello, {this.props.name}</h1>;
     }
 });
+class MyEditor extends React.Component {
+    onChange;
+    state;
+    constructor(props) {
+        super(props);
+        this.state = { editorState: EditorState.createEmpty() };
+        this.onChange = (editorState) => this.setState({ editorState });
+    }
+    render() {
+        return (
+            <div>
+                <Editor editorState={this.state.editorState} onChange={this.onChange} />
+                <Mention
+                    style={{ width: '100%' }}
+                    onChange={(suggestion) => {
+                        console.log('onSelect', suggestion);
+                    }}
+                    defaultValue={toContentState('@afc163')}
+                    suggestions={['afc163', 'benjycui', 'yiminghe', 'RaoHai', '中文', 'にほんご']} onSelect={(contentState) => {
+                        console.log(toString(contentState));
+                    }}
+                />
+            </div>
 
+        );
+    }
+}
 class Root extends Component {
     state = {
         name: '',
@@ -125,6 +152,7 @@ class Root extends Component {
             return null;
         }
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
+            <MyEditor />
             <input onChange={(e) => { console.log(e); }} />
             <Greeting name='ggg' />
             <br />

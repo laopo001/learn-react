@@ -78,12 +78,15 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
         try {
             // 有些属性不能设置到dom上。
             dom[name] = value || '';
-            if (value == null || value === false) dom.removeAttribute(name);
         } catch (e) {
-            dom.setAttribute(name, value);
+            // dom.setAttribute(name, value);
         }
     } else {
-        dom.setAttribute(name, value);
+        if (value == null || value === false) { dom.removeAttribute(name); }
+        else {
+            dom.setAttribute(name, value);
+        }
+
     }
 }
 
