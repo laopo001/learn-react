@@ -1,10 +1,11 @@
 {
   "name": "abcc",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "description": "无",
   "main": "lib/index.js",
   "scripts": {
     "start": "npm run build",
+    "test": "jest",
     "demo": "webpack --display-error-details --progress --colors --watch",
     "watch": "webpack --display-error-details --progress --colors --watch",
     "build": "webpack --display-error-details --progress --colors",
@@ -19,6 +20,7 @@
     "browser-sync": "^2.18.12",
     "browser-sync-webpack-plugin": "^1.2.0",
     "create-react-class": "^15.6.2",
+    "jest": "^21.2.1",
     "ts-loader": "^0.8.2",
     "typescript": "^2.5.2",
     "webpack": "^2.7.0"
