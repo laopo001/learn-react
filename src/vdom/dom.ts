@@ -56,24 +56,24 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
     } else if (name === 'dangerouslySetInnerHTML') {
         if (value) dom.innerHTML = value.__html || '';
     } else if (name[0] === 'o' && name[1] === 'n') {
-        let useCapture = name !== (name = name.replace(/Capture$/, ''));
-        name = name.toLowerCase().substring(2);
-        if (value) {
+        // let useCapture = name !== (name = name.replace(/Capture$/, ''));
+        // name = name.toLowerCase().substring(2);
+        // if (value) {
 
-            if (!oldvalue) {
-                if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change') {
-                    name = 'input';
-                }
-                if (name in events && !useCapture) {
-                    name = events[name];
-                }
-                dom.addEventListener(name, eventProxy, useCapture);
-            }
-        }
-        else {
-            dom.removeEventListener(name, eventProxy, useCapture);
-        }
-        (dom._listeners || (dom._listeners = {}))[name] = value;
+        //     if (!oldvalue) {
+        //         if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change') {
+        //             name = 'input';
+        //         }
+        //         if (name in events && !useCapture) {
+        //             name = events[name];
+        //         }
+        //         dom.addEventListener(name, eventProxy, useCapture);
+        //     }
+        // }
+        // else {
+        //     dom.removeEventListener(name, eventProxy, useCapture);
+        // }
+        (dom.__listeners__ || (dom.__listeners__ = {}))[name] = value;
     } else if (name in dom) {
         try {
             // 有些属性不能设置到dom上。
@@ -93,7 +93,7 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
 
 function eventProxy(e) {
 
-    return this._listeners[e.type](options.event && options.event(e) || e);
+    return this.__listeners__[e.type](options.event && options.event(e) || e);
 }
 
 export function insertAfter(newEl, targetEl, out?) {

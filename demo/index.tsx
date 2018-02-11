@@ -116,8 +116,8 @@ class MyEditor extends React.Component {
     }
     render() {
         return (
-            <div>
-                <div contentEditable={true} onSelect={(e) => { console.log(123, e) }}>999</div>
+            <div  onSelect={(e) => { console.log(123, e) }}>
+                <input  value="123"/>
                 <Editor editorState={this.state.editorState} onChange={this.onChange} />
                 <Mention
                     style={{ width: '100%' }}
