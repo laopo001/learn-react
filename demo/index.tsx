@@ -117,6 +117,7 @@ class MyEditor extends React.Component {
     render() {
         return (
             <div>
+                <div contentEditable={true} onSelect={(e) => { console.log(123, e) }}>999</div>
                 <Editor editorState={this.state.editorState} onChange={this.onChange} />
                 <Mention
                     style={{ width: '100%' }}
@@ -129,7 +130,6 @@ class MyEditor extends React.Component {
                     }}
                 />
             </div>
-
         );
     }
 }
