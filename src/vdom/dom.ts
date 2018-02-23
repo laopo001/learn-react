@@ -2,6 +2,8 @@
  * @author dadigua
  */
 import { IS_NON_DIMENSIONAL } from '../config/';
+import { EVENTOBJ, OTHER_EVENT, Reverse_EVENTOBJ, eventFormat } from './event';
+
 const options: any = {
     event(e) {
         e.persist = Object;
@@ -56,23 +58,32 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
     } else if (name === 'dangerouslySetInnerHTML') {
         if (value) dom.innerHTML = value.__html || '';
     } else if (name[0] === 'o' && name[1] === 'n') {
-        // let useCapture = name !== (name = name.replace(/Capture$/, ''));
-        // name = name.toLowerCase().substring(2);
-        // if (value) {
+        if (!(name in Reverse_EVENTOBJ)) {
+            // console.error('未知的事件');
+            return;
+        }
+        if (name in OTHER_EVENT) {
+            // name = name.replace(/Capture$/, '')
+            let useCapture = false;
+            // let domName = name.toLowerCase().substring(2);
+            let domName = Reverse_EVENTOBJ[name];
+            if (value) {
+                if (!oldvalue) {
+                    // if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change') {
+                    //     name = 'input';
+                    // }
+                    // if (name in events && !useCapture) {
+                    //     name = events[name];
+                    // }
+                    dom.addEventListener(domName, eventProxy, useCapture);
+                }
 
-        //     if (!oldvalue) {
-        //         if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change') {
-        //             name = 'input';
-        //         }
-        //         if (name in events && !useCapture) {
-        //             name = events[name];
-        //         }
-        //         dom.addEventListener(name, eventProxy, useCapture);
-        //     }
-        // }
-        // else {
-        //     dom.removeEventListener(name, eventProxy, useCapture);
-        // }
+            }
+            else {
+                dom.removeEventListener(domName, eventProxy, useCapture);
+            }
+
+        }
         (dom.__listeners__ || (dom.__listeners__ = {}))[name] = value;
     } else if (name in dom) {
         try {
@@ -92,8 +103,8 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
 
 
 function eventProxy(e) {
-
-    return this.__listeners__[e.type](options.event && options.event(e) || e);
+    const type = EVENTOBJ[e.type];
+    return this.__listeners__[type](eventFormat(e));
 }
 
 export function insertAfter(newEl, targetEl, out?) {

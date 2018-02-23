@@ -13,7 +13,7 @@ const Option = Select.Option;
 const { toString, toContentState } = Mention;
 import { Editor, EditorState } from 'draft-js';
 function ButtonDemo(props) {
-    return <Button>123123</Button>；
+    return <Button>123123</Button>
 }
 
 function IconDemo(props) {
@@ -116,8 +116,8 @@ class MyEditor extends React.Component {
     }
     render() {
         return (
-            <div  onSelect={(e) => { console.log(123, e) }}>
-                <input  value="123"/>
+            <div onSelect={(e) => { console.log(123, e) }}>
+                <input value="123" />
                 <Editor editorState={this.state.editorState} onChange={this.onChange} />
                 <Mention
                     style={{ width: '100%' }}

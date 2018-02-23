@@ -1,4 +1,4 @@
-const EVENTOBJ = {
+export const EVENTOBJ = {
     // Clipboard Events
     "copy": "onCopy", "cut": "onCut", "paste": "onPaste",
     // Composition Events
@@ -11,7 +11,9 @@ const EVENTOBJ = {
     "change": "onChange", "input": "onChange", "submit": "onSubmit",
     // Mouse Events
     "click": "onClick", "contextmenu": "onContextMenu", "dbclick": "onDoubleClick", "drag": "onDrag", "dragend": "onDragEnd", "dragenter": "onDragEnter", "dragexit": "onDragExit",
-    "dragleave": "onDragLeave", "dragover": "onDragOver", "dragstart": "onDragStart", "drop": "onDrop", "mousedown": "onMouseDown", "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave",
+    "dragleave": "onDragLeave", "dragover": "onDragOver", "dragstart": "onDragStart", "drop": "onDrop", "mousedown": "onMouseDown",
+    // onMouseEnter 和 onMouseLeave 事件由失去焦点的元素到正在输入的元素传播，并不是普通的冒泡，也没有捕获阶段。
+    "mouseenter": "onMouseEnter", "mouseleave": "onMouseLeave",
     "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp",
     // Selection Events
     "select": "onSelect",
@@ -36,22 +38,57 @@ const EVENTOBJ = {
     "toggle": "onToggle"
 }
 
-function eventFormat(e) {
-    e.persist = Object;
+export const OTHER_EVENT = {
+    "onMouseEnter": "mouseenter", "onMouseLeave": "mouseleave",
+}
+
+const Reverse_EVENTOBJ = {};
+
+export function eventFormat(e) {
+    e.persist = function () { return e; };
     e.nativeEvent = e;
+    e.stop = false;
+    const old_stopPropagation = e.stopPropagation;
+    e.stopPropagation = function () {
+        e.stop = true;
+    }
+    e.nativeEvent.stopPropagation = old_stopPropagation;
     return e;
 }
 
 
 for (let x in EVENTOBJ) {
-    document.addEventListener(x, function (e) {
-        // console.dir(EVENTOBJ[x])
-        // console.dir(e.target)
-        const type = EVENTOBJ[e.type];
-        let node: any = e.target;
-        while (node) {
-            node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](eventFormat(e) || e);
-            node = node.parentNode;
-        }
-    }, true)
+    Reverse_EVENTOBJ[EVENTOBJ[x]] = x;
+    if (!(EVENTOBJ[x] in OTHER_EVENT)) {
+        document.addEventListener(x, function (e: any) {
+            // console.dir(EVENTOBJ[x])
+            // if (e.type === 'click') {
+            //     console.dir(e.target)
+            // }
+
+            const type = EVENTOBJ[e.type];
+            const path = [];
+            let node: any = e.target;
+            while (node) {
+                path.push(node);
+                //       node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](eventFormat(e) || e);
+                node = node.parentNode;
+            }
+            let event = eventFormat(e);
+            // 模拟捕获
+            for (let i = path.length - 1; i >= 0; i--) {
+                if (event.stop) { break; }
+                let node = path[i];
+                node.__listeners__ && node.__listeners__[type + 'Capture'] && node.__listeners__[type](event);
+            }
+            // 模拟冒泡
+            for (let i = 0; i < path.length; i++) {
+                if (event.stop) { break; }
+                let node = path[i];
+                node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](event);
+            }
+        }, true)
+    }
 }
+
+export { Reverse_EVENTOBJ };
