@@ -15,12 +15,10 @@ module.exports = {
     //插件项
     plugins: [
         new BrowserSyncPlugin({
-            // host: 'localhost',
-            // port: 3000, //代理后访问的端口
             // proxy: 'localhost:80',//要代理的端口
             host: 'localhost',
             port: 5000,
-            server: { baseDir: [''] }
+            server: { baseDir: ['build'] }
         }),
     ],
     module: {

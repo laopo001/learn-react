@@ -58,10 +58,10 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
     } else if (name === 'dangerouslySetInnerHTML') {
         if (value) dom.innerHTML = value.__html || '';
     } else if (name[0] === 'o' && name[1] === 'n') {
-        if (!(name in Reverse_EVENTOBJ)) {
-            // console.error('未知的事件');
-            return;
-        }
+        // if (!(name in Reverse_EVENTOBJ)) {
+        //     // console.error('未知的事件');
+        //     return;
+        // }
         if (name in OTHER_EVENT) {
             // name = name.replace(/Capture$/, '')
             let useCapture = false;

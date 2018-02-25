@@ -22,7 +22,8 @@
     "create-react-class": "^15.6.2",
     "jest": "^21.2.1",
     "ts-loader": "^0.8.2",
-    "typescript": "^2.5.2",
-    "webpack": "^2.7.0"
+    "typescript": "^2.3.4",
+    "webpack": "^2.7.0",
+    "webpack-dev-server": "^2.11.1"
   }
 }

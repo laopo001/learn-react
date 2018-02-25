@@ -112,11 +112,17 @@ class MyEditor extends React.Component {
     constructor(props) {
         super(props);
         this.state = { editorState: EditorState.createEmpty() };
-        this.onChange = (editorState) => this.setState({ editorState });
+        this.onChange = (editorState) => {
+            this.setState({ editorState })
+        };
+    }
+    qq(e) {
+        // e.stopPropagation();
+        console.log(123, e)
     }
     render() {
         return (
-            <div onSelect={(e) => { console.log(123, e) }}>
+            <div onSelect={this.qq} onCopy={this.qq} onChange={this.qq}>
                 <input value="123" />
                 <Editor editorState={this.state.editorState} onChange={this.onChange} />
                 <Mention
