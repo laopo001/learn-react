@@ -1,7 +1,8 @@
 /**
  * @author dadigua
  */
-import React, { Component, render } from 'react';
+import React, { Component } from 'react';
+import { render } from 'react-dom';
 import * as createReactClass from 'create-react-class';
 
 
@@ -122,8 +123,9 @@ class MyEditor extends React.Component {
     }
     render() {
         return (
-            <div onSelect={this.qq} onCopy={this.qq} onChange={this.qq}>
+            <div onSelect={this.qq} >
                 <input value="123" />
+                <div contentEditable>contentEditable </div>
                 <Editor editorState={this.state.editorState} onChange={this.onChange} />
                 <Mention
                     style={{ width: '100%' }}
@@ -163,7 +165,7 @@ class Root extends Component {
             <Greeting name='ggg' />
             <br />
             {<Tabs defaultActiveKey='1' onChange={() => { }}>
-                <TabPane tab='Tab 1' key='1'>Content of Tab Pane 1</TabPane>
+                <TabPane tab='Tab 1' key='1'>Content of Tab Pane 11</TabPane>
                 <TabPane tab='Tab 2' key='2'>Content of Tab Pane 2</TabPane>
                 <TabPane tab='Tab 3' key='3'>Content of Tab Pane 3</TabPane>
             </Tabs>}
@@ -208,8 +210,8 @@ class Book extends Component<any, any> {
     }
 }
 class Q extends Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
         };
     }

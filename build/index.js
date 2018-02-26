@@ -17553,6 +17553,7 @@ var Component = /** @class */ (function () {
         //     this.__new__.state = Object.assign({}, this.state, state);
         //     if (callback) this._renderCallbacks.push(callback);
         // }
+        console.warn('replaceState');
     };
     Component.prototype.forceUpdate = function (callback) {
         if (callback)
@@ -17566,6 +17567,12 @@ var Component = /** @class */ (function () {
     Component.prototype.componentWillUnmount = function () { };
     Component.prototype.componentWillReceiveProps = function (nextProps, nextContext) { };
     Component.prototype.shouldComponentUpdate = function (nextProps, nextState, nextContext) { return true; };
+    Component.prototype.getPublicInstance = function () {
+        if (this.isStatelessComponent) {
+            return null;
+        }
+        return this;
+    };
     return Component;
 }());
 exports.Component = Component;
@@ -17577,6 +17584,17 @@ var PureComponent = /** @class */ (function (_super) {
     return PureComponent;
 }(Component));
 exports.PureComponent = PureComponent;
+var StatelessComponent = /** @class */ (function (_super) {
+    __extends(StatelessComponent, _super);
+    function StatelessComponent() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.isStatelessComponent = true;
+        return _this;
+    }
+    StatelessComponent.prototype.render = function () { };
+    return StatelessComponent;
+}(Component));
+exports.StatelessComponent = StatelessComponent;
 //# sourceMappingURL=component.js.map
 
 /***/ }),
@@ -21167,16 +21185,6 @@ exports.default = helpers;
 /**
  * @author dadigua
  */
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 var _1 = __webpack_require__(97);
 var component_1 = __webpack_require__(96);
@@ -21290,19 +21298,10 @@ function createComponent(Ctor, props, context) {
     }
     else {
         // 无状态组件
-        var StatelessComponent = /** @class */ (function (_super) {
-            __extends(StatelessComponent, _super);
-            function StatelessComponent() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            StatelessComponent.prototype.render = function () { };
-            return StatelessComponent;
-        }(component_1.Component));
         var t_props = util_1.propsClone({}, Ctor.defaultProps, props);
-        Ctor.prototype = new StatelessComponent(t_props, context);
+        Ctor.prototype = new component_1.StatelessComponent(t_props, context);
         Ctor.prototype.render = Ctor;
         Ctor.prototype.constructor = Ctor;
-        Ctor.prototype.isStatelessComponent = true;
         component = {};
         component.__proto__ = Ctor.prototype;
         Ctor.call(component, t_props, context);
@@ -21317,7 +21316,7 @@ function RenderComponentFromVNode(vnode, dom, context) {
     var component = findParentComponent(dom, vnode);
     if (component && component.constructor === vnode.name) {
         if (vnode.props.ref) {
-            vnode.props.ref(component);
+            vnode.props.ref(component.getPublicInstance());
             delete vnode.props.ref;
         }
         component.__new__.props = util_1.propsClone({}, vnode.name.defaultProps, vnode.props);
@@ -21331,7 +21330,7 @@ function RenderComponentFromVNode(vnode, dom, context) {
         var component_2 = createComponent(vnode.name, vnode.props, context);
         // 如果 props绑定ref
         if (vnode.props.ref) {
-            vnode.props.ref(component_2);
+            vnode.props.ref(component_2.getPublicInstance());
             delete component_2.props.ref;
         }
         return renderComponent(component_2, _1.RenderMode.ASYNC_RENDER, context, true);
@@ -45140,6 +45139,7 @@ exports.EVENTOBJ = {
     "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp",
     // Selection Events
     "select": "onNativeSelect",
+    "selectionchange": "onSelect",
     // Touch Events
     "touchcancel": "onTouchCancel", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart",
     // UI Events
@@ -45178,19 +45178,28 @@ function eventFormat(e) {
 }
 exports.eventFormat = eventFormat;
 function func(e) {
-    // console.dir(EVENTOBJ[x])
-    // if (e.type === 'input') {
-    //     console.dir(e.target)
+    // if (e.type === 'selectionchange') {
+    //     console.dir(e.type)
     // }
     var type = exports.EVENTOBJ[e.type];
     var node = e.target;
+    if (type === 'onSelect') {
+        if (document.activeElement) {
+            node = document.activeElement;
+        }
+        else {
+            var selection = window.getSelection();
+            node = selection.baseNode;
+        }
+        // e.target = node;
+    }
     if ((node.tagName === 'INPUT' && node.type === 'text') || node.tagName === 'textarea') {
         if (e.type === 'change') {
             return;
         }
-        if (e.type === 'mouseup') {
-            type = 'onSelect';
-        }
+        // if (e.type === 'mouseup') {
+        //     type = 'onSelect';
+        // }
         if (type === 'onInput') {
             type = 'onChange';
         }
@@ -45199,11 +45208,6 @@ function func(e) {
     while (node) {
         path.push(node);
         // node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](eventFormat(e) || e);
-        // if (node.contentEditable === 'true') {
-        //     if (e.type === 'mouseup') {
-        //         type = 'onSelect';
-        //     }
-        // }
         node = node.parentNode;
     }
     var event = eventFormat(e);
@@ -45233,9 +45237,6 @@ for (var x in exports.EVENTOBJ) {
         document.addEventListener(x, func, true);
     }
 }
-document.addEventListener("selectionchange", function (e) {
-    console.log(e, e.type);
-});
 //# sourceMappingURL=event.js.map
 
 /***/ }),
@@ -56925,7 +56926,7 @@ function removeFileItem(file, fileList) {
 /* 501 */
 /***/ (function(module, exports) {
 
-module.exports = {"_from":"antd@^2.13.10","_id":"antd@2.13.11","_inBundle":false,"_integrity":"sha1-WcDB552wcJL6bujQD3dmjojHL7A=","_location":"/antd","_phantomChildren":{},"_requested":{"type":"range","registry":true,"raw":"antd@^2.13.10","name":"antd","escapedName":"antd","rawSpec":"^2.13.10","saveSpec":null,"fetchSpec":"^2.13.10"},"_requiredBy":["#DEV:/"],"_resolved":"http://registry.npm.taobao.org/antd/download/antd-2.13.11.tgz","_shasum":"59c0c1e79db07092fa6ee8d00f77668e88c72fb0","_spec":"antd@^2.13.10","_where":"C:\\Users\\35327\\Githubs\\learn-react","bugs":{"url":"https://github.com/ant-design/ant-design/issues"},"bundleDependencies":false,"contributors":[{"name":"ant"}],"dependencies":{"array-tree-filter":"~1.0.0","babel-runtime":"6.x","classnames":"~2.2.0","create-react-class":"^15.6.0","css-animation":"^1.2.5","dom-closest":"^0.2.0","lodash.debounce":"^4.0.8","moment":"^2.19.3","omit.js":"^1.0.0","prop-types":"^15.5.7","rc-animate":"^2.4.1","rc-calendar":"~9.0.0","rc-cascader":"~0.11.3","rc-checkbox":"~2.0.3","rc-collapse":"~1.7.5","rc-dialog":"~6.5.10","rc-dropdown":"~1.5.0","rc-editor-mention":"~0.6.12","rc-form":"~1.4.0","rc-input-number":"~3.6.0","rc-menu":"~5.0.10","rc-notification":"~2.0.0","rc-pagination":"~1.12.4","rc-progress":"~2.2.2","rc-rate":"~2.1.1","rc-select":"~6.9.0","rc-slider":"~8.3.0","rc-steps":"~2.5.1","rc-switch":"~1.5.1","rc-table":"~5.6.9","rc-tabs":"~9.1.2","rc-time-picker":"~2.4.1","rc-tooltip":"~3.4.6","rc-tree":"~1.7.0","rc-tree-select":"~1.10.2","rc-upload":"~2.4.0","rc-util":"^4.0.4","react-lazy-load":"^3.0.12","react-slick":"~0.15.4","shallowequal":"^1.0.1","warning":"~3.0.0"},"deprecated":false,"description":"An enterprise-class UI design language and React-based implementation","devDependencies":{"@types/react":"^16.0.21","@types/react-dom":"~0.14.18","ansi-styles":"^3.2.0","antd-tools":"~2.1.0","babel-cli":"^6.18.0","babel-eslint":"^8.0.1","babel-plugin-import":"^1.0.0","babel-plugin-transform-runtime":"^6.23.0","babel-preset-es2015":"^6.18.0","babel-preset-react":"^6.16.0","babel-preset-stage-0":"^6.16.0","bezier-easing":"^2.0.3","bisheng":"^0.25.0","bisheng-plugin-antd":"^0.15.0","bisheng-plugin-description":"^0.1.1","bisheng-plugin-react":"^0.5.0","bisheng-plugin-toc":"^0.4.0","color-standalone":"^0.11.6","commander":"^2.11.0","cross-env":"^5.0.3","css-split-webpack-plugin":"^0.2.3","dekko":"^0.2.0","delegate":"^3.1.2","dora-plugin-upload":"^0.3.1","enquire.js":"^2.1.1","enzyme":"^2.6.0","enzyme-to-json":"^1.3.0","eslint":"^4.8.0","eslint-config-airbnb":"latest","eslint-plugin-babel":"^4.0.0","eslint-plugin-import":"^2.2.0","eslint-plugin-jsx-a11y":"^6.0.2","eslint-plugin-markdown":"~1.0.0-beta.4","eslint-plugin-react":"7.4.0","eslint-tinker":"^0.4.0","fetch-jsonp":"^1.0.3","glob":"^7.1.1","jest":"^21.1.0","jsonml.js":"^0.1.0","lint-staged":"^4.0.2","majo":"^0.4.1","mockdate":"^2.0.1","moment-timezone":"^0.5.5","pre-commit":"^1.2.2","preact":"^8.2.5","preact-compat":"^3.17.0","querystring":"^0.2.0","rc-queue-anim":"^1.0.1","rc-scroll-anim":"^1.0.3","rc-tween-one":"^1.1.2","react":"^15.0.0","react-color":"^2.11.7","react-copy-to-clipboard":"^5.0.0","react-document-title":"^2.0.1","react-dom":"^15.0.0","react-github-button":"^0.1.1","react-intl":"^2.0.1","react-sublime-video":"^0.2.0","react-test-renderer":"^15.5.4","remark-frontmatter":"^1.1.0","remark-parse":"^4.0.0","remark-stringify":"^4.0.0","remark-yaml-config":"^4.0.1","reqwest":"^2.0.5","rimraf":"^2.5.4","stylelint":"^8.0.0","stylelint-config-standard":"^17.0.0","typescript":"~2.5.3","unified":"^6.1.5","values.js":"^1.0.3","xhr2":"^0.1.3"},"files":["dist","lib","es"],"homepage":"http://ant.design/","keywords":["ant","design","react","react-component","component","components","ui","framework","frontend"],"license":"MIT","lint-staged":{"components/**/*.tsx":["lint-staged:ts"],"{tests,site,scripts,components}/**/*.{js,jsx}":["lint-staged:es"],"{site,components}/**/*.less":"stylelint --syntax less","components/*/demo/*.md":["lint-staged:demo"]},"main":"lib/index.js","module":"es/index.js","name":"antd","peerDependencies":{"react":"~0.14.0 || >=15.0.0","react-dom":"~0.14.0 || >=15.0.0"},"pre-commit":["lint-staged"],"repository":{"type":"git","url":"git+https://github.com/ant-design/ant-design.git"},"scripts":{"authors":"git log --format='%aN <%aE>' | sort -u | grep -v 'users.noreply.github.com' | grep -v 'gitter.im' | grep -v '.local>' | grep -v 'alibaba-inc.com' | grep -v 'alipay.com' | grep -v 'taobao.com' > AUTHORS.txt","compile":"antd-tools run compile","deploy":"antd-tools run clean && npm run site && node ./scripts/generateColorLess.js && bisheng gh-pages --push-only","dist":"antd-tools run dist","lint":"npm run lint:ts && npm run lint:es && npm run lint:demo && npm run lint:style","lint-fix":"npm run lint-fix:code && npm run lint-fix:demo","lint-fix:code":"eslint --fix tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint-fix:demo":"eslint-tinker ./components/*/demo/*.md","lint-fix:ts":"npm run tsc && antd-tools run ts-lint-fix","lint-staged":"lint-staged","lint-staged:demo":"cross-env RUN_ENV=DEMO eslint --ext '.md'","lint-staged:es":"eslint ./.eslintrc.js ./webpack.config.js","lint-staged:ts":"tsc && node node_modules/tslint/bin/tslint -c node_modules/antd-tools/lib/tslint.json","lint:demo":"cross-env RUN_ENV=DEMO eslint components/*/demo/*.md --ext '.md'","lint:es":"eslint tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint:style":"stylelint \"{site,components}/**/*.less\" --syntax less","lint:ts":"npm run tsc && antd-tools run ts-lint","pre-publish":"npm run test-all && node ./scripts/prepub","prepublish":"antd-tools run guard","pub":"antd-tools run pub","site":"cross-env NODE_ENV=production bisheng build --ssr -c ./site/bisheng.config.js","sort-api":"node ./scripts/sort-api-table.js","start":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development bisheng start -c ./site/bisheng.config.js --no-livereload","start:preact":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development REACT_ENV=preact bisheng start -c ./site/bisheng.config.js --no-livereload","test":"jest --config .jest.js","test-all":"./scripts/test-all.sh","test-node":"jest --config .jest.node.js","tsc":"tsc"},"title":"Ant Design","typings":"lib/index.d.ts","version":"2.13.11"}
+module.exports = {"_args":[["antd@2.13.11","/home/ldh/GitHubs/abc"]],"_development":true,"_from":"antd@2.13.11","_id":"antd@2.13.11","_inBundle":false,"_integrity":"sha1-WcDB552wcJL6bujQD3dmjojHL7A=","_location":"/antd","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"antd@2.13.11","name":"antd","escapedName":"antd","rawSpec":"2.13.11","saveSpec":null,"fetchSpec":"2.13.11"},"_requiredBy":["#DEV:/"],"_resolved":"http://registry.npm.taobao.org/antd/download/antd-2.13.11.tgz","_spec":"2.13.11","_where":"/home/ldh/GitHubs/abc","bugs":{"url":"https://github.com/ant-design/ant-design/issues"},"contributors":[{"name":"ant"}],"dependencies":{"array-tree-filter":"~1.0.0","babel-runtime":"6.x","classnames":"~2.2.0","create-react-class":"^15.6.0","css-animation":"^1.2.5","dom-closest":"^0.2.0","lodash.debounce":"^4.0.8","moment":"^2.19.3","omit.js":"^1.0.0","prop-types":"^15.5.7","rc-animate":"^2.4.1","rc-calendar":"~9.0.0","rc-cascader":"~0.11.3","rc-checkbox":"~2.0.3","rc-collapse":"~1.7.5","rc-dialog":"~6.5.10","rc-dropdown":"~1.5.0","rc-editor-mention":"~0.6.12","rc-form":"~1.4.0","rc-input-number":"~3.6.0","rc-menu":"~5.0.10","rc-notification":"~2.0.0","rc-pagination":"~1.12.4","rc-progress":"~2.2.2","rc-rate":"~2.1.1","rc-select":"~6.9.0","rc-slider":"~8.3.0","rc-steps":"~2.5.1","rc-switch":"~1.5.1","rc-table":"~5.6.9","rc-tabs":"~9.1.2","rc-time-picker":"~2.4.1","rc-tooltip":"~3.4.6","rc-tree":"~1.7.0","rc-tree-select":"~1.10.2","rc-upload":"~2.4.0","rc-util":"^4.0.4","react-lazy-load":"^3.0.12","react-slick":"~0.15.4","shallowequal":"^1.0.1","warning":"~3.0.0"},"description":"An enterprise-class UI design language and React-based implementation","devDependencies":{"@types/react":"^16.0.21","@types/react-dom":"~0.14.18","ansi-styles":"^3.2.0","antd-tools":"~2.1.0","babel-cli":"^6.18.0","babel-eslint":"^8.0.1","babel-plugin-import":"^1.0.0","babel-plugin-transform-runtime":"^6.23.0","babel-preset-es2015":"^6.18.0","babel-preset-react":"^6.16.0","babel-preset-stage-0":"^6.16.0","bezier-easing":"^2.0.3","bisheng":"^0.25.0","bisheng-plugin-antd":"^0.15.0","bisheng-plugin-description":"^0.1.1","bisheng-plugin-react":"^0.5.0","bisheng-plugin-toc":"^0.4.0","color-standalone":"^0.11.6","commander":"^2.11.0","cross-env":"^5.0.3","css-split-webpack-plugin":"^0.2.3","dekko":"^0.2.0","delegate":"^3.1.2","dora-plugin-upload":"^0.3.1","enquire.js":"^2.1.1","enzyme":"^2.6.0","enzyme-to-json":"^1.3.0","eslint":"^4.8.0","eslint-config-airbnb":"latest","eslint-plugin-babel":"^4.0.0","eslint-plugin-import":"^2.2.0","eslint-plugin-jsx-a11y":"^6.0.2","eslint-plugin-markdown":"~1.0.0-beta.4","eslint-plugin-react":"7.4.0","eslint-tinker":"^0.4.0","fetch-jsonp":"^1.0.3","glob":"^7.1.1","jest":"^21.1.0","jsonml.js":"^0.1.0","lint-staged":"^4.0.2","majo":"^0.4.1","mockdate":"^2.0.1","moment-timezone":"^0.5.5","pre-commit":"^1.2.2","preact":"^8.2.5","preact-compat":"^3.17.0","querystring":"^0.2.0","rc-queue-anim":"^1.0.1","rc-scroll-anim":"^1.0.3","rc-tween-one":"^1.1.2","react":"^15.0.0","react-color":"^2.11.7","react-copy-to-clipboard":"^5.0.0","react-document-title":"^2.0.1","react-dom":"^15.0.0","react-github-button":"^0.1.1","react-intl":"^2.0.1","react-sublime-video":"^0.2.0","react-test-renderer":"^15.5.4","remark-frontmatter":"^1.1.0","remark-parse":"^4.0.0","remark-stringify":"^4.0.0","remark-yaml-config":"^4.0.1","reqwest":"^2.0.5","rimraf":"^2.5.4","stylelint":"^8.0.0","stylelint-config-standard":"^17.0.0","typescript":"~2.5.3","unified":"^6.1.5","values.js":"^1.0.3","xhr2":"^0.1.3"},"files":["dist","lib","es"],"homepage":"http://ant.design/","keywords":["ant","design","react","react-component","component","components","ui","framework","frontend"],"license":"MIT","lint-staged":{"components/**/*.tsx":["lint-staged:ts"],"{tests,site,scripts,components}/**/*.{js,jsx}":["lint-staged:es"],"{site,components}/**/*.less":"stylelint --syntax less","components/*/demo/*.md":["lint-staged:demo"]},"main":"lib/index.js","module":"es/index.js","name":"antd","peerDependencies":{"react":"~0.14.0 || >=15.0.0","react-dom":"~0.14.0 || >=15.0.0"},"pre-commit":["lint-staged"],"repository":{"type":"git","url":"git+https://github.com/ant-design/ant-design.git"},"scripts":{"authors":"git log --format='%aN <%aE>' | sort -u | grep -v 'users.noreply.github.com' | grep -v 'gitter.im' | grep -v '.local>' | grep -v 'alibaba-inc.com' | grep -v 'alipay.com' | grep -v 'taobao.com' > AUTHORS.txt","compile":"antd-tools run compile","deploy":"antd-tools run clean && npm run site && node ./scripts/generateColorLess.js && bisheng gh-pages --push-only","dist":"antd-tools run dist","lint":"npm run lint:ts && npm run lint:es && npm run lint:demo && npm run lint:style","lint-fix":"npm run lint-fix:code && npm run lint-fix:demo","lint-fix:code":"eslint --fix tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint-fix:demo":"eslint-tinker ./components/*/demo/*.md","lint-fix:ts":"npm run tsc && antd-tools run ts-lint-fix","lint-staged":"lint-staged","lint-staged:demo":"cross-env RUN_ENV=DEMO eslint --ext '.md'","lint-staged:es":"eslint ./.eslintrc.js ./webpack.config.js","lint-staged:ts":"tsc && node node_modules/tslint/bin/tslint -c node_modules/antd-tools/lib/tslint.json","lint:demo":"cross-env RUN_ENV=DEMO eslint components/*/demo/*.md --ext '.md'","lint:es":"eslint tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint:style":"stylelint \"{site,components}/**/*.less\" --syntax less","lint:ts":"npm run tsc && antd-tools run ts-lint","pre-publish":"npm run test-all && node ./scripts/prepub","prepublish":"antd-tools run guard","pub":"antd-tools run pub","site":"cross-env NODE_ENV=production bisheng build --ssr -c ./site/bisheng.config.js","sort-api":"node ./scripts/sort-api-table.js","start":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development bisheng start -c ./site/bisheng.config.js --no-livereload","start:preact":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development REACT_ENV=preact bisheng start -c ./site/bisheng.config.js --no-livereload","test":"jest --config .jest.js","test-all":"./scripts/test-all.sh","test-node":"jest --config .jest.node.js","tsc":"tsc"},"title":"Ant Design","typings":"lib/index.d.ts","version":"2.13.11"}
 
 /***/ }),
 /* 502 */
@@ -98945,6 +98946,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @author dadigua
  */
 var react_1 = __webpack_require__(0);
+var react_dom_1 = __webpack_require__(0);
 var createReactClass = __webpack_require__(13);
 var antd_1 = __webpack_require__(407);
 var SubMenu = antd_1.Menu.SubMenu;
@@ -99044,8 +99046,9 @@ var MyEditor = (function (_super) {
         console.log(123, e);
     };
     MyEditor.prototype.render = function () {
-        return (react_1.default.createElement("div", { onSelect: this.qq, onCopy: this.qq, onChange: this.qq },
+        return (react_1.default.createElement("div", { onSelect: this.qq },
             react_1.default.createElement("input", { value: "123" }),
+            react_1.default.createElement("div", { contentEditable: true }, "contentEditable "),
             react_1.default.createElement(draft_js_1.Editor, { editorState: this.state.editorState, onChange: this.onChange }),
             react_1.default.createElement(antd_1.Mention, { style: { width: '100%' }, onChange: function (suggestion) {
                     console.log('onSelect', suggestion);
@@ -99085,7 +99088,7 @@ var Root = (function (_super) {
             react_1.default.createElement(Greeting, { name: 'ggg' }),
             react_1.default.createElement("br", null),
             react_1.default.createElement(antd_1.Tabs, { defaultActiveKey: '1', onChange: function () { } },
-                react_1.default.createElement(TabPane, { tab: 'Tab 1', key: '1' }, "Content of Tab Pane 1"),
+                react_1.default.createElement(TabPane, { tab: 'Tab 1', key: '1' }, "Content of Tab Pane 11"),
                 react_1.default.createElement(TabPane, { tab: 'Tab 2', key: '2' }, "Content of Tab Pane 2"),
                 react_1.default.createElement(TabPane, { tab: 'Tab 3', key: '3' }, "Content of Tab Pane 3")),
             react_1.default.createElement(Es5, { src: 'https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3247817123,3423989056&fm=173&s=C5F21CC56C01014B5291A9180300D0D3&w=218&h=146&img.JPG' }),
@@ -99123,8 +99126,8 @@ var Book = (function (_super) {
 }(react_1.Component));
 var Q = (function (_super) {
     __extends(Q, _super);
-    function Q() {
-        var _this = _super.call(this) || this;
+    function Q(props) {
+        var _this = _super.call(this, props) || this;
         _this.state = {};
         return _this;
     }
@@ -99173,7 +99176,7 @@ var Me = (function (_super) {
     };
     return Me;
 }(react_1.default.Component));
-react_1.render(react_1.default.createElement(Root, null), document.getElementById('root'));
+react_dom_1.render(react_1.default.createElement(Root, null), document.getElementById('root'));
 
 
 /***/ }),

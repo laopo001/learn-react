@@ -3,7 +3,7 @@
  */
 
 import { RenderMode } from '../config/';
-import { Component } from '../component';
+import { Component, StatelessComponent } from '../component';
 import { VNode } from '../vnode';
 import { diff, recollectNodeTree } from './diff';
 import { propsClone } from './util';
@@ -96,6 +96,7 @@ export function findParentComponent(dom, vnode: VNode): Component | null {
     }
 }
 
+
 export function createComponent(Ctor, props, context) {
     let component;
     // 类形式的组件
@@ -112,16 +113,11 @@ export function createComponent(Ctor, props, context) {
 
     } else {
         // 无状态组件
-
-        class StatelessComponent extends Component {
-            render() { }
-        }
         let t_props = propsClone({}, Ctor.defaultProps, props);
 
         Ctor.prototype = new StatelessComponent(t_props, context)
         Ctor.prototype.render = Ctor;
         Ctor.prototype.constructor = Ctor;
-        Ctor.prototype.isStatelessComponent = true;
 
         component = {};
         component.__proto__ = Ctor.prototype;
@@ -136,7 +132,7 @@ export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
     let component: Component = findParentComponent(dom, vnode);
     if (component && component.constructor === vnode.name) {
         if (vnode.props.ref) {
-            vnode.props.ref(component);
+            vnode.props.ref(component.getPublicInstance());
             delete vnode.props.ref;
         }
         component.__new__.props = propsClone({}, vnode.name.defaultProps, vnode.props);
@@ -151,7 +147,7 @@ export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
         let component: Component = createComponent(vnode.name, vnode.props, context);
         // 如果 props绑定ref
         if (vnode.props.ref) {
-            vnode.props.ref(component);
+            vnode.props.ref(component.getPublicInstance());
             delete component.props.ref;
         }
         return renderComponent(component, RenderMode.ASYNC_RENDER, context, true);

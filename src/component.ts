@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import { enqueueRender, forceRender } from './rerender';
-import { VNode } from './vnode';
+// import { VNode } from './vnode';
 export interface ICache {
     state;
     props?;
@@ -57,7 +57,7 @@ export abstract class Component {
         //     this.__new__.state = Object.assign({}, this.state, state);
         //     if (callback) this._renderCallbacks.push(callback);
         // }
-
+        console.warn('replaceState');
     }
     forceUpdate(callback) {
         if (callback) this._renderCallbacks.push(callback);
@@ -70,9 +70,20 @@ export abstract class Component {
     componentWillUnmount() { }
     componentWillReceiveProps(nextProps, nextContext) { }
     shouldComponentUpdate(nextProps, nextState, nextContext): boolean { return true; }
+    getPublicInstance() {
+        if ((this as any).isStatelessComponent) {
+            return null;
+        }
+        return this;
+    }
     abstract render(props, context);
 }
 
 export abstract class PureComponent extends Component {
 
+}
+
+export class StatelessComponent extends Component {
+    isStatelessComponent = true
+    render() { }
 }

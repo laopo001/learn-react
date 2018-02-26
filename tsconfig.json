@@ -19,8 +19,8 @@
       "./node_modules/@types",
       "./dist"
     ],
-    "outDir": "node_modules/treact/lib",
-    "types": ["react"]
+    "outDir": "node_modules/treact",
+    "types": ["react","react-dom"]
   },
   "files": [
     "./src/index.ts"

@@ -17,6 +17,7 @@ export const EVENTOBJ = {
     "mousemove": "onMouseMove", "mouseout": "onMouseOut", "mouseover": "onMouseOver", "mouseup": "onMouseUp",
     // Selection Events
     "select": "onNativeSelect",
+    "selectionchange": "onSelect",
     // Touch Events
     "touchcancel": "onTouchCancel", "touchend": "onTouchEnd", "touchmove": "onTouchMove", "touchstart": "onTouchStart",
     // UI Events
@@ -57,19 +58,29 @@ export function eventFormat(e) {
 }
 
 function func(e: any) {
-    // console.dir(EVENTOBJ[x])
-    // if (e.type === 'input') {
-    //     console.dir(e.target)
+    // if (e.type === 'selectionchange') {
+    //     console.dir(e.type)
     // }
+
     let type = EVENTOBJ[e.type];
     let node: any = e.target;
+    if (type === 'onSelect') {
+        if (document.activeElement) {
+            node = document.activeElement;
+        } else {
+            let selection = window.getSelection()
+            node = selection.baseNode;
+        }
+        // e.target = node;
+    }
+
     if ((node.tagName === 'INPUT' && node.type === 'text') || node.tagName === 'textarea') {
         if (e.type === 'change') {
             return;
         }
-        if (e.type === 'mouseup') {
-            type = 'onSelect';
-        }
+        // if (e.type === 'mouseup') {
+        //     type = 'onSelect';
+        // }
         if (type === 'onInput') {
             type = 'onChange';
         }
@@ -79,11 +90,6 @@ function func(e: any) {
     while (node) {
         path.push(node);
         // node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](eventFormat(e) || e);
-        // if (node.contentEditable === 'true') {
-        //     if (e.type === 'mouseup') {
-        //         type = 'onSelect';
-        //     }
-        // }
         node = node.parentNode;
     }
     let event = eventFormat(e);
@@ -111,9 +117,6 @@ for (let x in EVENTOBJ) {
     }
 }
 
-document.addEventListener("selectionchange", function (e) {
-    console.log(e,e.type);
-});
 
 
 export { Reverse_EVENTOBJ };

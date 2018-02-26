@@ -9,6 +9,7 @@
     "demo": "webpack --display-error-details --progress --colors --watch",
     "watch": "webpack --display-error-details --progress --colors --watch",
     "build": "webpack --display-error-details --progress --colors",
+    "postinstall": "tsc",
     "prepublish": "rm -rf lib&&tsc --outDir lib"
   },
   "author": "ldh",
@@ -16,6 +17,7 @@
   "dependencies": {},
   "devDependencies": {
     "@types/react": "^16.0.10",
+    "@types/react-dom": "^16.0.4",
     "antd": "^2.13.10",
     "browser-sync": "^2.18.12",
     "browser-sync-webpack-plugin": "^1.2.0",
