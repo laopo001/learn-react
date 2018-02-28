@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import { IS_NON_DIMENSIONAL } from '../config/';
-import { EVENTOBJ, OTHER_EVENT, Reverse_EVENTOBJ, eventFormat } from './event';
+import { EVENTOBJ, OTHER_EVENT, Reverse_EVENTOBJ, SyntheticEvent } from './event';
 
 const options: any = {
     event(e) {
@@ -104,7 +104,7 @@ export function setAttribute(dom, name, value, prevProps, nextProps) {
 
 function eventProxy(e) {
     const type = EVENTOBJ[e.type];
-    return this.__listeners__[type](eventFormat(e));
+    return this.__listeners__[type](new SyntheticEvent(e));
 }
 
 export function insertAfter(newEl, targetEl, out?) {

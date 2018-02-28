@@ -45,42 +45,57 @@ export const OTHER_EVENT = {
 
 const Reverse_EVENTOBJ = {};
 
-export function eventFormat(e) {
-    e.persist = function () { return e; };
-    e.nativeEvent = e;
-    e.stop = false;
-    // const old_stopPropagation = e.stopPropagation;
-    e.stopPropagation = function () {
-        e.stop = true;
-    }
-    // e.nativeEvent.stopPropagation = old_stopPropagation;
-    return e;
-}
+// export function eventFormat(e) {
+//     e.persist = function () { return e; };
+//     e.nativeEvent = e;
+//     e.stop = false;
+//     // const old_stopPropagation = e.stopPropagation;
+//     e.stopPropagation = function () {
+//         e.stop = true;
+//     }
+//     // e.nativeEvent.stopPropagation = old_stopPropagation;
+//     return e;
+// }
 
-function func(e: any) {
-    // if (e.type === 'selectionchange') {
+let can_trigger_select = false;
+function func(e: any, b?) {
+    // if (e.type === 'input') {
     //     console.dir(e.type)
     // }
+    let syntheticEvent;
+    if (b) {
+        syntheticEvent = e;
+    } else {
+        syntheticEvent = new SyntheticEvent(e);
+    }
 
-    let type = EVENTOBJ[e.type];
-    let node: any = e.target;
-    if (type === 'onSelect') {
+
+    if (syntheticEvent.type === 'keydown' || syntheticEvent.type === 'mousedown') {
+        can_trigger_select = true;
+    }
+    if (syntheticEvent.type === 'selectionchange') {
+        if (can_trigger_select) {
+            can_trigger_select = false;
+        } else {
+            return;
+        }
+    }
+    let type = EVENTOBJ[syntheticEvent.changetype || syntheticEvent.type];
+    let node: any = syntheticEvent.target;
+    if (syntheticEvent.type==='selectionchange') {
         if (document.activeElement) {
             node = document.activeElement;
         } else {
             let selection = window.getSelection()
             node = selection.baseNode;
         }
-        // e.target = node;
+        syntheticEvent.target = node;
     }
 
     if ((node.tagName === 'INPUT' && node.type === 'text') || node.tagName === 'textarea') {
-        if (e.type === 'change') {
+        if (syntheticEvent.type === 'change') {
             return;
         }
-        // if (e.type === 'mouseup') {
-        //     type = 'onSelect';
-        // }
         if (type === 'onInput') {
             type = 'onChange';
         }
@@ -89,24 +104,31 @@ function func(e: any) {
     const path = [];
     while (node) {
         path.push(node);
-        // node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](eventFormat(e) || e);
         node = node.parentNode;
     }
-    let event = eventFormat(e);
+    // let event = eventFormat(syntheticEvent);
     // 模拟捕获
+    let captureType = type + 'Capture'
+    syntheticEvent.reactEventType = captureType;
     for (let i = path.length - 1; i >= 0; i--) {
-        if (event.stop) { break; }
+        if (syntheticEvent.stop) { break; }
         let node = path[i];
         let captureType = type + 'Capture'
-        e.reactEventType = captureType;
-        node.__listeners__ && node.__listeners__[captureType] && node.__listeners__[captureType](event);
+        syntheticEvent.currentTarget = node;
+        node.__listeners__ && node.__listeners__[captureType] && node.__listeners__[captureType](syntheticEvent);
     }
     // 模拟冒泡
+    syntheticEvent.reactEventType = type;
     for (let i = 0; i < path.length; i++) {
-        if (event.stop) { break; }
+        if (syntheticEvent.stop) { break; }
         let node = path[i];
-        e.reactEventType = type;
-        node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](event);
+        syntheticEvent.currentTarget = node;
+        node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](syntheticEvent);
+    }
+
+    if (syntheticEvent.type === 'keydown' && syntheticEvent.code === 'Backspace' && !b) {
+        syntheticEvent.changetype = 'selectionchange';
+        func(syntheticEvent, true)
     }
 }
 
@@ -117,6 +139,35 @@ for (let x in EVENTOBJ) {
     }
 }
 
+export class SyntheticEvent {
+    nativeEvent;
+    target;
+    type;
+    changetype;
+    reactEventType;
+    code;
+    currentTarget;
+    constructor(e) {
+        for (let x in e) {
+            if (!(x === 'stopPropagation' || x === 'preventDefault')) {
+                this[x] = e[x];
+            }
+
+        }
+        this.nativeEvent = e;
+    }
+    persist() {
+        return Object.assign({},this);
+    };
+    stop = false;
+    // const old_stopPropagation = e.stopPropagation;
+    stopPropagation() {
+        this.stop = true;
+    }
+    preventDefault() {
+        this.nativeEvent.preventDefault();
+    }
+}
 
 
 export { Reverse_EVENTOBJ };

@@ -45165,25 +45165,43 @@ exports.OTHER_EVENT = {
 };
 var Reverse_EVENTOBJ = {};
 exports.Reverse_EVENTOBJ = Reverse_EVENTOBJ;
-function eventFormat(e) {
-    e.persist = function () { return e; };
-    e.nativeEvent = e;
-    e.stop = false;
-    // const old_stopPropagation = e.stopPropagation;
-    e.stopPropagation = function () {
-        e.stop = true;
-    };
-    // e.nativeEvent.stopPropagation = old_stopPropagation;
-    return e;
-}
-exports.eventFormat = eventFormat;
-function func(e) {
-    // if (e.type === 'selectionchange') {
+// export function eventFormat(e) {
+//     e.persist = function () { return e; };
+//     e.nativeEvent = e;
+//     e.stop = false;
+//     // const old_stopPropagation = e.stopPropagation;
+//     e.stopPropagation = function () {
+//         e.stop = true;
+//     }
+//     // e.nativeEvent.stopPropagation = old_stopPropagation;
+//     return e;
+// }
+var can_trigger_select = false;
+function func(e, b) {
+    // if (e.type === 'input') {
     //     console.dir(e.type)
     // }
-    var type = exports.EVENTOBJ[e.type];
-    var node = e.target;
-    if (type === 'onSelect') {
+    var syntheticEvent;
+    if (b) {
+        syntheticEvent = e;
+    }
+    else {
+        syntheticEvent = new SyntheticEvent(e);
+    }
+    if (syntheticEvent.type === 'keydown' || syntheticEvent.type === 'mousedown') {
+        can_trigger_select = true;
+    }
+    if (syntheticEvent.type === 'selectionchange') {
+        if (can_trigger_select) {
+            can_trigger_select = false;
+        }
+        else {
+            return;
+        }
+    }
+    var type = exports.EVENTOBJ[syntheticEvent.changetype || syntheticEvent.type];
+    var node = syntheticEvent.target;
+    if (syntheticEvent.type === 'selectionchange') {
         if (document.activeElement) {
             node = document.activeElement;
         }
@@ -45191,15 +45209,12 @@ function func(e) {
             var selection = window.getSelection();
             node = selection.baseNode;
         }
-        // e.target = node;
+        syntheticEvent.target = node;
     }
     if ((node.tagName === 'INPUT' && node.type === 'text') || node.tagName === 'textarea') {
-        if (e.type === 'change') {
+        if (syntheticEvent.type === 'change') {
             return;
         }
-        // if (e.type === 'mouseup') {
-        //     type = 'onSelect';
-        // }
         if (type === 'onInput') {
             type = 'onChange';
         }
@@ -45207,28 +45222,34 @@ function func(e) {
     var path = [];
     while (node) {
         path.push(node);
-        // node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](eventFormat(e) || e);
         node = node.parentNode;
     }
-    var event = eventFormat(e);
+    // let event = eventFormat(syntheticEvent);
     // 模拟捕获
+    var captureType = type + 'Capture';
+    syntheticEvent.reactEventType = captureType;
     for (var i = path.length - 1; i >= 0; i--) {
-        if (event.stop) {
+        if (syntheticEvent.stop) {
             break;
         }
         var node_1 = path[i];
-        var captureType = type + 'Capture';
-        e.reactEventType = captureType;
-        node_1.__listeners__ && node_1.__listeners__[captureType] && node_1.__listeners__[captureType](event);
+        var captureType_1 = type + 'Capture';
+        syntheticEvent.currentTarget = node_1;
+        node_1.__listeners__ && node_1.__listeners__[captureType_1] && node_1.__listeners__[captureType_1](syntheticEvent);
     }
     // 模拟冒泡
+    syntheticEvent.reactEventType = type;
     for (var i = 0; i < path.length; i++) {
-        if (event.stop) {
+        if (syntheticEvent.stop) {
             break;
         }
         var node_2 = path[i];
-        e.reactEventType = type;
-        node_2.__listeners__ && node_2.__listeners__[type] && node_2.__listeners__[type](event);
+        syntheticEvent.currentTarget = node_2;
+        node_2.__listeners__ && node_2.__listeners__[type] && node_2.__listeners__[type](syntheticEvent);
+    }
+    if (syntheticEvent.type === 'keydown' && syntheticEvent.code === 'Backspace' && !b) {
+        syntheticEvent.changetype = 'selectionchange';
+        func(syntheticEvent, true);
     }
 }
 for (var x in exports.EVENTOBJ) {
@@ -45237,6 +45258,30 @@ for (var x in exports.EVENTOBJ) {
         document.addEventListener(x, func, true);
     }
 }
+var SyntheticEvent = /** @class */ (function () {
+    function SyntheticEvent(e) {
+        this.stop = false;
+        for (var x in e) {
+            if (!(x === 'stopPropagation' || x === 'preventDefault')) {
+                this[x] = e[x];
+            }
+        }
+        this.nativeEvent = e;
+    }
+    SyntheticEvent.prototype.persist = function () {
+        return Object.assign({}, this);
+    };
+    ;
+    // const old_stopPropagation = e.stopPropagation;
+    SyntheticEvent.prototype.stopPropagation = function () {
+        this.stop = true;
+    };
+    SyntheticEvent.prototype.preventDefault = function () {
+        this.nativeEvent.preventDefault();
+    };
+    return SyntheticEvent;
+}());
+exports.SyntheticEvent = SyntheticEvent;
 //# sourceMappingURL=event.js.map
 
 /***/ }),
@@ -98911,7 +98956,7 @@ function setAttribute(dom, name, value, prevProps, nextProps) {
 exports.setAttribute = setAttribute;
 function eventProxy(e) {
     var type = event_1.EVENTOBJ[e.type];
-    return this.__listeners__[type](event_1.eventFormat(e));
+    return this.__listeners__[type](new event_1.SyntheticEvent(e));
 }
 function insertAfter(newEl, targetEl, out) {
     var parentEl = out == null ? targetEl.parentNode : out;
@@ -99043,7 +99088,7 @@ var MyEditor = (function (_super) {
     }
     MyEditor.prototype.qq = function (e) {
         // e.stopPropagation();
-        console.log(123, e);
+        console.log(123, e.persist());
     };
     MyEditor.prototype.render = function () {
         return (react_1.default.createElement("div", { onSelect: this.qq },
