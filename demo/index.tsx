@@ -119,7 +119,7 @@ class MyEditor extends React.Component {
     }
     qq(e) {
         // e.stopPropagation();
-        console.log(123, e.persist())
+        console.log(123, e.persist().target)
     }
     render() {
         return (

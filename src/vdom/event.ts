@@ -58,10 +58,17 @@ const Reverse_EVENTOBJ = {};
 // }
 
 let can_trigger_select = false;
+let wait_trigger_select = false;
+let is_trigger_selectionchange_event = false;
 function func(e: any, b?) {
-    // if (e.type === 'input') {
-    //     console.dir(e.type)
-    // }
+    if (e.type === 'beforeinput') {
+        console.dir('-----------beforeinput-----------', e.type)
+        return ;
+    }
+    if (e.type === 'input') {
+        console.dir('-----------input-----------', e.type)
+        return ;
+    }
     let syntheticEvent;
     if (b) {
         syntheticEvent = e;
@@ -70,19 +77,30 @@ function func(e: any, b?) {
     }
 
 
-    if (syntheticEvent.type === 'keydown' || syntheticEvent.type === 'mousedown') {
+    if (syntheticEvent.type === 'keydown' || syntheticEvent.type === 'mouseup') {
         can_trigger_select = true;
     }
-    if (syntheticEvent.type === 'selectionchange') {
+    if (syntheticEvent.type === 'keyup') {
+        can_trigger_select = false;
+    }
+    if (syntheticEvent.type === 'mousedown') {
+        wait_trigger_select = true;
+    }
+    if (syntheticEvent.changetype || syntheticEvent.type === 'selectionchange') {
         if (can_trigger_select) {
             can_trigger_select = false;
+            is_trigger_selectionchange_event = false;
+            wait_trigger_select = false;
         } else {
+            if (wait_trigger_select) {
+                is_trigger_selectionchange_event = true;
+            }
             return;
         }
     }
     let type = EVENTOBJ[syntheticEvent.changetype || syntheticEvent.type];
     let node: any = syntheticEvent.target;
-    if (syntheticEvent.type==='selectionchange') {
+    if (syntheticEvent.type === 'selectionchange') {
         if (document.activeElement) {
             node = document.activeElement;
         } else {
@@ -130,6 +148,10 @@ function func(e: any, b?) {
         syntheticEvent.changetype = 'selectionchange';
         func(syntheticEvent, true)
     }
+    if (syntheticEvent.type === 'mouseup' && !b && is_trigger_selectionchange_event) {
+        syntheticEvent.changetype = 'selectionchange';
+        func(syntheticEvent, true)
+    }
 }
 
 for (let x in EVENTOBJ) {
@@ -157,7 +179,7 @@ export class SyntheticEvent {
         this.nativeEvent = e;
     }
     persist() {
-        return Object.assign({},this);
+        return Object.assign({}, this);
     };
     stop = false;
     // const old_stopPropagation = e.stopPropagation;
