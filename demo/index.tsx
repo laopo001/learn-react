@@ -118,8 +118,7 @@ class MyEditor extends React.Component {
         };
     }
     qq(e) {
-        // e.stopPropagation();
-        console.log(123, e.persist().target)
+        console.log(e.type, e.target)
     }
     render() {
         return (

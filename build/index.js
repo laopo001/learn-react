@@ -45179,15 +45179,7 @@ exports.Reverse_EVENTOBJ = Reverse_EVENTOBJ;
 var can_trigger_select = false;
 var wait_trigger_select = false;
 var is_trigger_selectionchange_event = false;
-function func(e, b) {
-    if (e.type === 'beforeinput') {
-        console.dir('-----------beforeinput-----------', e.type);
-        return;
-    }
-    if (e.type === 'input') {
-        console.dir('-----------input-----------', e.type);
-        return;
-    }
+function dispatchEvent(e, b) {
     var syntheticEvent;
     if (b) {
         syntheticEvent = e;
@@ -45253,6 +45245,12 @@ function func(e, b) {
         var node_1 = path[i];
         var captureType_1 = type + 'Capture';
         syntheticEvent.currentTarget = node_1;
+        if (i === 0) {
+            syntheticEvent.eventPhase = 2;
+        }
+        else {
+            syntheticEvent.eventPhase = 1;
+        }
         node_1.__listeners__ && node_1.__listeners__[captureType_1] && node_1.__listeners__[captureType_1](syntheticEvent);
     }
     // 模拟冒泡
@@ -45263,32 +45261,41 @@ function func(e, b) {
         }
         var node_2 = path[i];
         syntheticEvent.currentTarget = node_2;
+        if (i === 0) {
+            syntheticEvent.eventPhase = 2;
+        }
+        else {
+            syntheticEvent.eventPhase = 3;
+        }
         node_2.__listeners__ && node_2.__listeners__[type] && node_2.__listeners__[type](syntheticEvent);
     }
     if (syntheticEvent.type === 'keydown' && syntheticEvent.code === 'Backspace' && !b) {
         syntheticEvent.changetype = 'selectionchange';
-        func(syntheticEvent, true);
+        dispatchEvent(syntheticEvent, true);
     }
     if (syntheticEvent.type === 'mouseup' && !b && is_trigger_selectionchange_event) {
         syntheticEvent.changetype = 'selectionchange';
-        func(syntheticEvent, true);
+        dispatchEvent(syntheticEvent, true);
     }
 }
 for (var x in exports.EVENTOBJ) {
     Reverse_EVENTOBJ[exports.EVENTOBJ[x]] = x;
     if (!(exports.EVENTOBJ[x] in exports.OTHER_EVENT)) {
-        document.addEventListener(x, func, true);
+        document.addEventListener(x, dispatchEvent, true);
     }
 }
 var SyntheticEvent = /** @class */ (function () {
     function SyntheticEvent(e) {
+        this.eventPhase = 0;
+        this.defaultPrevented = false;
         this.stop = false;
+        this.nativeEvent = e;
         for (var x in e) {
-            if (!(x === 'stopPropagation' || x === 'preventDefault')) {
+            if (!(x === 'stopPropagation' || x === 'preventDefault' || x === 'eventPhase' || x === 'srcElement')) {
                 this[x] = e[x];
             }
         }
-        this.nativeEvent = e;
+        this.eventPhase = 0;
     }
     SyntheticEvent.prototype.persist = function () {
         return Object.assign({}, this);
@@ -45296,10 +45303,19 @@ var SyntheticEvent = /** @class */ (function () {
     ;
     // const old_stopPropagation = e.stopPropagation;
     SyntheticEvent.prototype.stopPropagation = function () {
+        console.log('stopPropagation');
         this.stop = true;
     };
     SyntheticEvent.prototype.preventDefault = function () {
-        this.nativeEvent.preventDefault();
+        this.defaultPrevented = true;
+        var event = this.nativeEvent;
+        if (!event) {
+            return;
+        }
+        if (event.preventDefault) {
+            event.preventDefault();
+        }
+        event.returnValue = false;
     };
     return SyntheticEvent;
 }());
@@ -61885,7 +61901,7 @@ var DraftEditor = function (_React$Component) {
     return function (e) {
       if (!_this2.props.readOnly) {
         var method = _this2._handler && _this2._handler[eventName];
-        console.log(e,eventName)
+        console.log(e, eventName)
         method && method(_this2, e);
       }
     };
@@ -61915,8 +61931,8 @@ var DraftEditor = function (_React$Component) {
 
   DraftEditor.prototype.render = function render() {
     var _props = this.props,
-        readOnly = _props.readOnly,
-        textAlignment = _props.textAlignment;
+      readOnly = _props.readOnly,
+      textAlignment = _props.textAlignment;
 
     var rootClass = cx({
       'DraftEditor/root': true,
@@ -61947,7 +61963,8 @@ var DraftEditor = function (_React$Component) {
         'div',
         {
           className: cx('DraftEditor/editorContainer'),
-          ref: 'editorContainer' },
+          ref: 'editorContainer'
+        },
         React.createElement(
           'div',
           {
@@ -61996,7 +62013,8 @@ var DraftEditor = function (_React$Component) {
             spellCheck: allowSpellCheck && this.props.spellCheck,
             style: contentStyle,
             suppressContentEditableWarning: true,
-            tabIndex: this.props.tabIndex },
+            tabIndex: this.props.tabIndex
+          },
           React.createElement(DraftEditorContents, {
             blockRenderMap: this.props.blockRenderMap,
             blockRendererFn: this.props.blockRendererFn,
@@ -62073,8 +62091,8 @@ var DraftEditor = function (_React$Component) {
     var scrollParent = Style.getScrollParent(editorNode);
 
     var _ref = scrollPosition || getScrollPosition(scrollParent),
-        x = _ref.x,
-        y = _ref.y;
+      x = _ref.x,
+      y = _ref.y;
 
     !(editorNode instanceof HTMLElement) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'editorNode is not an HTMLElement') : invariant(false) : void 0;
     editorNode.focus();
@@ -99110,8 +99128,7 @@ var MyEditor = (function (_super) {
         return _this;
     }
     MyEditor.prototype.qq = function (e) {
-        // e.stopPropagation();
-        console.log(123, e.persist().target);
+        console.log(e.type, e.target);
     };
     MyEditor.prototype.render = function () {
         return (react_1.default.createElement("div", { onSelect: this.qq },

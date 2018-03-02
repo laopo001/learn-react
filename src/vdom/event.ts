@@ -60,22 +60,15 @@ const Reverse_EVENTOBJ = {};
 let can_trigger_select = false;
 let wait_trigger_select = false;
 let is_trigger_selectionchange_event = false;
-function func(e: any, b?) {
-    if (e.type === 'beforeinput') {
-        console.dir('-----------beforeinput-----------', e.type)
-        return ;
-    }
-    if (e.type === 'input') {
-        console.dir('-----------input-----------', e.type)
-        return ;
-    }
+
+function dispatchEvent(e: any, b?) {
+
     let syntheticEvent;
     if (b) {
         syntheticEvent = e;
     } else {
         syntheticEvent = new SyntheticEvent(e);
     }
-
 
     if (syntheticEvent.type === 'keydown' || syntheticEvent.type === 'mouseup') {
         can_trigger_select = true;
@@ -127,12 +120,18 @@ function func(e: any, b?) {
     // let event = eventFormat(syntheticEvent);
     // 模拟捕获
     let captureType = type + 'Capture'
+
     syntheticEvent.reactEventType = captureType;
     for (let i = path.length - 1; i >= 0; i--) {
         if (syntheticEvent.stop) { break; }
         let node = path[i];
         let captureType = type + 'Capture'
         syntheticEvent.currentTarget = node;
+        if (i === 0) {
+            syntheticEvent.eventPhase = 2;
+        } else {
+            syntheticEvent.eventPhase = 1;
+        }
         node.__listeners__ && node.__listeners__[captureType] && node.__listeners__[captureType](syntheticEvent);
     }
     // 模拟冒泡
@@ -141,23 +140,28 @@ function func(e: any, b?) {
         if (syntheticEvent.stop) { break; }
         let node = path[i];
         syntheticEvent.currentTarget = node;
+        if (i === 0) {
+            syntheticEvent.eventPhase = 2;
+        } else {
+            syntheticEvent.eventPhase = 3;
+        }
         node.__listeners__ && node.__listeners__[type] && node.__listeners__[type](syntheticEvent);
     }
 
     if (syntheticEvent.type === 'keydown' && syntheticEvent.code === 'Backspace' && !b) {
         syntheticEvent.changetype = 'selectionchange';
-        func(syntheticEvent, true)
+        dispatchEvent(syntheticEvent, true)
     }
     if (syntheticEvent.type === 'mouseup' && !b && is_trigger_selectionchange_event) {
         syntheticEvent.changetype = 'selectionchange';
-        func(syntheticEvent, true)
+        dispatchEvent(syntheticEvent, true)
     }
 }
 
 for (let x in EVENTOBJ) {
     Reverse_EVENTOBJ[EVENTOBJ[x]] = x;
     if (!(EVENTOBJ[x] in OTHER_EVENT)) {
-        document.addEventListener(x, func, true)
+        document.addEventListener(x, dispatchEvent, true)
     }
 }
 
@@ -167,16 +171,19 @@ export class SyntheticEvent {
     type;
     changetype;
     reactEventType;
+    eventPhase = 0;
     code;
+    defaultPrevented = false;
     currentTarget;
     constructor(e) {
+        this.nativeEvent = e;
         for (let x in e) {
-            if (!(x === 'stopPropagation' || x === 'preventDefault')) {
+            if (!(x === 'stopPropagation' || x === 'preventDefault' || x === 'eventPhase' || x === 'srcElement')) {
                 this[x] = e[x];
             }
 
         }
-        this.nativeEvent = e;
+        this.eventPhase = 0;
     }
     persist() {
         return Object.assign({}, this);
@@ -184,10 +191,20 @@ export class SyntheticEvent {
     stop = false;
     // const old_stopPropagation = e.stopPropagation;
     stopPropagation() {
+
         this.stop = true;
     }
     preventDefault() {
-        this.nativeEvent.preventDefault();
+        this.defaultPrevented = true;
+        var event = this.nativeEvent;
+        if (!event) {
+            return;
+        }
+        if (event.preventDefault) {
+            event.preventDefault();
+        }
+        event.returnValue = false;
+
     }
 }
 
