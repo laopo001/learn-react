@@ -53,7 +53,7 @@ export const Children = {
 
 
 export function render(vnode, parent): Component {
-    let dom = create(vnode, {}, parent);
+    let dom:any = create(vnode, {}, parent);
     dom.__isContainer__ = true;
     return findParentComponent(dom, vnode);
 }
@@ -85,7 +85,9 @@ export function renderSubtreeIntoContainer(parentComponent, vnode, container, ca
 export function unmountComponentAtNode(dom) {
     if (dom.__isContainer__ === true) {
         recollectNodeChildren(dom.childNodes, true);
-    } else {
-        console.error('不是容器');
+        return true;
+    } else{
+        return false;
     }
+
 }

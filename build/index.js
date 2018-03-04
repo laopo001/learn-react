@@ -89,9 +89,10 @@ var react_dom_1 = __webpack_require__(920);
 exports.Children = react_dom_1.Children;
 exports.findDOMNode = react_dom_1.findDOMNode;
 exports.render = react_dom_1.render;
+exports.unmountComponentAtNode = react_dom_1.unmountComponentAtNode;
 exports.unstable_renderSubtreeIntoContainer = react_dom_1.renderSubtreeIntoContainer;
 __webpack_require__(404);
-var React = { h: h_1.h, createElement: h_1.h, Component: component_1.Component, render: react_dom_1.render, Children: react_dom_1.Children, findDOMNode: react_dom_1.findDOMNode, cloneElement: h_1.cloneElement, isValidElement: h_1.isValidElement, unstable_renderSubtreeIntoContainer: react_dom_1.renderSubtreeIntoContainer, createClass: h_1.createClass, PureComponent: component_1.PureComponent };
+var React = { h: h_1.h, createElement: h_1.h, Component: component_1.Component, render: react_dom_1.render, Children: react_dom_1.Children, findDOMNode: react_dom_1.findDOMNode, cloneElement: h_1.cloneElement, isValidElement: h_1.isValidElement, unstable_renderSubtreeIntoContainer: react_dom_1.renderSubtreeIntoContainer, createClass: h_1.createClass, PureComponent: component_1.PureComponent, unmountComponentAtNode: react_dom_1.unmountComponentAtNode };
 exports.default = React;
 //# sourceMappingURL=index.js.map
 
@@ -21230,7 +21231,7 @@ function renderComponent(component, opts, context, isCreate) {
         vnode.childrenRef_bind(component);
     }
     var nextContext = Object.assign({}, component.context, component.getChildContext());
-    var dom = diff_1.diff(vnode, component.__dom__, nextContext);
+    var dom = diff_1.diff(vnode, component.__dom__, nextContext, component);
     component.__dom__ = dom;
     setParentComponent(dom, component);
     if (!isCreate) {
@@ -21359,6 +21360,7 @@ var componentUtil_1 = __webpack_require__(155);
 var vnode_1 = __webpack_require__(406);
 exports.mounts = [];
 var isSvgMode = false;
+// let prevSvgMode = false;
 function create(vnode, context, parent) {
     var ret = diff(vnode, null, context);
     if (parent)
@@ -21367,12 +21369,19 @@ function create(vnode, context, parent) {
     return ret;
 }
 exports.create = create;
-function diff(vnode, dom, context) {
+function diff(vnode, dom, context, component) {
+    isSvgMode = dom != null && dom.ownerSVGElement !== undefined;
+    return idiff(vnode, dom, context, component);
+}
+exports.diff = diff;
+function idiff(vnode, dom, context, component) {
+    var prevSvgMode = isSvgMode;
     var out = dom;
     if (vnode instanceof vnode_1.VNode) {
+        isSvgMode = vnode.name === 'svg' ? true : vnode.name === 'foreignObject' ? false : isSvgMode;
         if (typeof vnode.name === 'string') {
             if (!dom || !vnode.isSameName(dom)) {
-                out = vnode.createDom();
+                out = vnode.createDom(isSvgMode);
             }
             if (vnode.children.length > 0) {
                 diffChild(vnode.children, out.childNodes, context, out);
@@ -21410,16 +21419,18 @@ function diff(vnode, dom, context) {
     if (dom && dom !== out && !dom.__moveOut__) {
         dom.parentNode.replaceChild(out, dom);
         if (dom.__render__ === true) {
-            dom.__moveOut__ = true;
+            // dom.__moveOut__ = true;
+            recollectNodeTree(dom, false, component);
             delete dom.__render__;
         }
         else {
             recollectNodeTree(dom, false);
         }
     }
+    isSvgMode = prevSvgMode;
     return out;
 }
-exports.diff = diff;
+exports.idiff = idiff;
 function diffChild(vnodeChildren, domChildren, context, out) {
     if (domChildren == null) {
         domChildren = [];
@@ -21463,7 +21474,7 @@ function diffChild(vnodeChildren, domChildren, context, out) {
             childDOM = domArr[j];
             j++;
         }
-        newChildDOM = diff(child, childDOM, context);
+        newChildDOM = idiff(child, childDOM, context);
         if (child && child.key != null) {
             newChildDOM.__key__ = uuid;
         }
@@ -21498,10 +21509,11 @@ function diffProps(props, out) {
         if (name_1 === 'children')
             continue;
         if (out && out[name_1] !== props[name_1]) {
-            dom_1.setAttribute(out, name_1, props[name_1], oldProps, props);
+            dom_1.setAttribute(out, name_1, props[name_1], oldProps, props, isSvgMode);
         }
         if (out.oldVNode && !(name_1 in oldProps)) {
-            out.removeAttribute(name_1);
+            dom_1.setOrRemoveAttribute(out, name_1, null, isSvgMode);
+            // out.removeAttribute(name);
         }
     }
 }
@@ -21512,22 +21524,39 @@ function recollectNodeChildren(doms, isRemove) {
         }
     }
     else {
-        for (var i = 0; i < doms.childNodes; i++) {
+        for (var i = 0; i < doms.length; i++) {
             recollectNodeTree(doms[i], isRemove);
         }
     }
 }
 exports.recollectNodeChildren = recollectNodeChildren;
-function recollectNodeTree(dom, isRemove) {
+function recollectNodeTree(dom, isRemove, component) {
     if (dom.__moveOut__) {
         return;
     }
-    if (dom.__parentComponent__ != null) {
-        var c = dom.__parentComponent__;
-        componentUtil_1.unmountComponent(c);
-        while (c.__parentComponent__) {
-            c = c.__parentComponent__;
+    if (component != null) {
+        if (dom.__parentComponent__ != null) {
+            var c = dom.__parentComponent__;
+            if (c !== component) {
+                componentUtil_1.unmountComponent(c);
+                while (c.__parentComponent__) {
+                    c = c.__parentComponent__;
+                    if (c === component) {
+                        break;
+                    }
+                    componentUtil_1.unmountComponent(c);
+                }
+            }
+        }
+    }
+    else {
+        if (dom.__parentComponent__ != null) {
+            var c = dom.__parentComponent__;
             componentUtil_1.unmountComponent(c);
+            while (c.__parentComponent__) {
+                c = c.__parentComponent__;
+                componentUtil_1.unmountComponent(c);
+            }
         }
     }
     recollectNodeChildren(dom.childNodes, false);
@@ -45303,7 +45332,6 @@ var SyntheticEvent = /** @class */ (function () {
     ;
     // const old_stopPropagation = e.stopPropagation;
     SyntheticEvent.prototype.stopPropagation = function () {
-        console.log('stopPropagation');
         this.stop = true;
     };
     SyntheticEvent.prototype.preventDefault = function () {
@@ -57009,7 +57037,7 @@ function removeFileItem(file, fileList) {
 /* 501 */
 /***/ (function(module, exports) {
 
-module.exports = {"_args":[["antd@2.13.11","/home/ldh/GitHubs/abc"]],"_development":true,"_from":"antd@2.13.11","_id":"antd@2.13.11","_inBundle":false,"_integrity":"sha1-WcDB552wcJL6bujQD3dmjojHL7A=","_location":"/antd","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"antd@2.13.11","name":"antd","escapedName":"antd","rawSpec":"2.13.11","saveSpec":null,"fetchSpec":"2.13.11"},"_requiredBy":["#DEV:/"],"_resolved":"http://registry.npm.taobao.org/antd/download/antd-2.13.11.tgz","_spec":"2.13.11","_where":"/home/ldh/GitHubs/abc","bugs":{"url":"https://github.com/ant-design/ant-design/issues"},"contributors":[{"name":"ant"}],"dependencies":{"array-tree-filter":"~1.0.0","babel-runtime":"6.x","classnames":"~2.2.0","create-react-class":"^15.6.0","css-animation":"^1.2.5","dom-closest":"^0.2.0","lodash.debounce":"^4.0.8","moment":"^2.19.3","omit.js":"^1.0.0","prop-types":"^15.5.7","rc-animate":"^2.4.1","rc-calendar":"~9.0.0","rc-cascader":"~0.11.3","rc-checkbox":"~2.0.3","rc-collapse":"~1.7.5","rc-dialog":"~6.5.10","rc-dropdown":"~1.5.0","rc-editor-mention":"~0.6.12","rc-form":"~1.4.0","rc-input-number":"~3.6.0","rc-menu":"~5.0.10","rc-notification":"~2.0.0","rc-pagination":"~1.12.4","rc-progress":"~2.2.2","rc-rate":"~2.1.1","rc-select":"~6.9.0","rc-slider":"~8.3.0","rc-steps":"~2.5.1","rc-switch":"~1.5.1","rc-table":"~5.6.9","rc-tabs":"~9.1.2","rc-time-picker":"~2.4.1","rc-tooltip":"~3.4.6","rc-tree":"~1.7.0","rc-tree-select":"~1.10.2","rc-upload":"~2.4.0","rc-util":"^4.0.4","react-lazy-load":"^3.0.12","react-slick":"~0.15.4","shallowequal":"^1.0.1","warning":"~3.0.0"},"description":"An enterprise-class UI design language and React-based implementation","devDependencies":{"@types/react":"^16.0.21","@types/react-dom":"~0.14.18","ansi-styles":"^3.2.0","antd-tools":"~2.1.0","babel-cli":"^6.18.0","babel-eslint":"^8.0.1","babel-plugin-import":"^1.0.0","babel-plugin-transform-runtime":"^6.23.0","babel-preset-es2015":"^6.18.0","babel-preset-react":"^6.16.0","babel-preset-stage-0":"^6.16.0","bezier-easing":"^2.0.3","bisheng":"^0.25.0","bisheng-plugin-antd":"^0.15.0","bisheng-plugin-description":"^0.1.1","bisheng-plugin-react":"^0.5.0","bisheng-plugin-toc":"^0.4.0","color-standalone":"^0.11.6","commander":"^2.11.0","cross-env":"^5.0.3","css-split-webpack-plugin":"^0.2.3","dekko":"^0.2.0","delegate":"^3.1.2","dora-plugin-upload":"^0.3.1","enquire.js":"^2.1.1","enzyme":"^2.6.0","enzyme-to-json":"^1.3.0","eslint":"^4.8.0","eslint-config-airbnb":"latest","eslint-plugin-babel":"^4.0.0","eslint-plugin-import":"^2.2.0","eslint-plugin-jsx-a11y":"^6.0.2","eslint-plugin-markdown":"~1.0.0-beta.4","eslint-plugin-react":"7.4.0","eslint-tinker":"^0.4.0","fetch-jsonp":"^1.0.3","glob":"^7.1.1","jest":"^21.1.0","jsonml.js":"^0.1.0","lint-staged":"^4.0.2","majo":"^0.4.1","mockdate":"^2.0.1","moment-timezone":"^0.5.5","pre-commit":"^1.2.2","preact":"^8.2.5","preact-compat":"^3.17.0","querystring":"^0.2.0","rc-queue-anim":"^1.0.1","rc-scroll-anim":"^1.0.3","rc-tween-one":"^1.1.2","react":"^15.0.0","react-color":"^2.11.7","react-copy-to-clipboard":"^5.0.0","react-document-title":"^2.0.1","react-dom":"^15.0.0","react-github-button":"^0.1.1","react-intl":"^2.0.1","react-sublime-video":"^0.2.0","react-test-renderer":"^15.5.4","remark-frontmatter":"^1.1.0","remark-parse":"^4.0.0","remark-stringify":"^4.0.0","remark-yaml-config":"^4.0.1","reqwest":"^2.0.5","rimraf":"^2.5.4","stylelint":"^8.0.0","stylelint-config-standard":"^17.0.0","typescript":"~2.5.3","unified":"^6.1.5","values.js":"^1.0.3","xhr2":"^0.1.3"},"files":["dist","lib","es"],"homepage":"http://ant.design/","keywords":["ant","design","react","react-component","component","components","ui","framework","frontend"],"license":"MIT","lint-staged":{"components/**/*.tsx":["lint-staged:ts"],"{tests,site,scripts,components}/**/*.{js,jsx}":["lint-staged:es"],"{site,components}/**/*.less":"stylelint --syntax less","components/*/demo/*.md":["lint-staged:demo"]},"main":"lib/index.js","module":"es/index.js","name":"antd","peerDependencies":{"react":"~0.14.0 || >=15.0.0","react-dom":"~0.14.0 || >=15.0.0"},"pre-commit":["lint-staged"],"repository":{"type":"git","url":"git+https://github.com/ant-design/ant-design.git"},"scripts":{"authors":"git log --format='%aN <%aE>' | sort -u | grep -v 'users.noreply.github.com' | grep -v 'gitter.im' | grep -v '.local>' | grep -v 'alibaba-inc.com' | grep -v 'alipay.com' | grep -v 'taobao.com' > AUTHORS.txt","compile":"antd-tools run compile","deploy":"antd-tools run clean && npm run site && node ./scripts/generateColorLess.js && bisheng gh-pages --push-only","dist":"antd-tools run dist","lint":"npm run lint:ts && npm run lint:es && npm run lint:demo && npm run lint:style","lint-fix":"npm run lint-fix:code && npm run lint-fix:demo","lint-fix:code":"eslint --fix tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint-fix:demo":"eslint-tinker ./components/*/demo/*.md","lint-fix:ts":"npm run tsc && antd-tools run ts-lint-fix","lint-staged":"lint-staged","lint-staged:demo":"cross-env RUN_ENV=DEMO eslint --ext '.md'","lint-staged:es":"eslint ./.eslintrc.js ./webpack.config.js","lint-staged:ts":"tsc && node node_modules/tslint/bin/tslint -c node_modules/antd-tools/lib/tslint.json","lint:demo":"cross-env RUN_ENV=DEMO eslint components/*/demo/*.md --ext '.md'","lint:es":"eslint tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint:style":"stylelint \"{site,components}/**/*.less\" --syntax less","lint:ts":"npm run tsc && antd-tools run ts-lint","pre-publish":"npm run test-all && node ./scripts/prepub","prepublish":"antd-tools run guard","pub":"antd-tools run pub","site":"cross-env NODE_ENV=production bisheng build --ssr -c ./site/bisheng.config.js","sort-api":"node ./scripts/sort-api-table.js","start":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development bisheng start -c ./site/bisheng.config.js --no-livereload","start:preact":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development REACT_ENV=preact bisheng start -c ./site/bisheng.config.js --no-livereload","test":"jest --config .jest.js","test-all":"./scripts/test-all.sh","test-node":"jest --config .jest.node.js","tsc":"tsc"},"title":"Ant Design","typings":"lib/index.d.ts","version":"2.13.11"}
+module.exports = {"_from":"antd@^2.13.10","_id":"antd@2.13.11","_inBundle":false,"_integrity":"sha1-WcDB552wcJL6bujQD3dmjojHL7A=","_location":"/antd","_phantomChildren":{},"_requested":{"type":"range","registry":true,"raw":"antd@^2.13.10","name":"antd","escapedName":"antd","rawSpec":"^2.13.10","saveSpec":null,"fetchSpec":"^2.13.10"},"_requiredBy":["#DEV:/"],"_resolved":"http://registry.npm.taobao.org/antd/download/antd-2.13.11.tgz","_shasum":"59c0c1e79db07092fa6ee8d00f77668e88c72fb0","_spec":"antd@^2.13.10","_where":"C:\\Users\\35327\\Githubs\\learn-react","bugs":{"url":"https://github.com/ant-design/ant-design/issues"},"bundleDependencies":false,"contributors":[{"name":"ant"}],"dependencies":{"array-tree-filter":"~1.0.0","babel-runtime":"6.x","classnames":"~2.2.0","create-react-class":"^15.6.0","css-animation":"^1.2.5","dom-closest":"^0.2.0","lodash.debounce":"^4.0.8","moment":"^2.19.3","omit.js":"^1.0.0","prop-types":"^15.5.7","rc-animate":"^2.4.1","rc-calendar":"~9.0.0","rc-cascader":"~0.11.3","rc-checkbox":"~2.0.3","rc-collapse":"~1.7.5","rc-dialog":"~6.5.10","rc-dropdown":"~1.5.0","rc-editor-mention":"~0.6.12","rc-form":"~1.4.0","rc-input-number":"~3.6.0","rc-menu":"~5.0.10","rc-notification":"~2.0.0","rc-pagination":"~1.12.4","rc-progress":"~2.2.2","rc-rate":"~2.1.1","rc-select":"~6.9.0","rc-slider":"~8.3.0","rc-steps":"~2.5.1","rc-switch":"~1.5.1","rc-table":"~5.6.9","rc-tabs":"~9.1.2","rc-time-picker":"~2.4.1","rc-tooltip":"~3.4.6","rc-tree":"~1.7.0","rc-tree-select":"~1.10.2","rc-upload":"~2.4.0","rc-util":"^4.0.4","react-lazy-load":"^3.0.12","react-slick":"~0.15.4","shallowequal":"^1.0.1","warning":"~3.0.0"},"deprecated":false,"description":"An enterprise-class UI design language and React-based implementation","devDependencies":{"@types/react":"^16.0.21","@types/react-dom":"~0.14.18","ansi-styles":"^3.2.0","antd-tools":"~2.1.0","babel-cli":"^6.18.0","babel-eslint":"^8.0.1","babel-plugin-import":"^1.0.0","babel-plugin-transform-runtime":"^6.23.0","babel-preset-es2015":"^6.18.0","babel-preset-react":"^6.16.0","babel-preset-stage-0":"^6.16.0","bezier-easing":"^2.0.3","bisheng":"^0.25.0","bisheng-plugin-antd":"^0.15.0","bisheng-plugin-description":"^0.1.1","bisheng-plugin-react":"^0.5.0","bisheng-plugin-toc":"^0.4.0","color-standalone":"^0.11.6","commander":"^2.11.0","cross-env":"^5.0.3","css-split-webpack-plugin":"^0.2.3","dekko":"^0.2.0","delegate":"^3.1.2","dora-plugin-upload":"^0.3.1","enquire.js":"^2.1.1","enzyme":"^2.6.0","enzyme-to-json":"^1.3.0","eslint":"^4.8.0","eslint-config-airbnb":"latest","eslint-plugin-babel":"^4.0.0","eslint-plugin-import":"^2.2.0","eslint-plugin-jsx-a11y":"^6.0.2","eslint-plugin-markdown":"~1.0.0-beta.4","eslint-plugin-react":"7.4.0","eslint-tinker":"^0.4.0","fetch-jsonp":"^1.0.3","glob":"^7.1.1","jest":"^21.1.0","jsonml.js":"^0.1.0","lint-staged":"^4.0.2","majo":"^0.4.1","mockdate":"^2.0.1","moment-timezone":"^0.5.5","pre-commit":"^1.2.2","preact":"^8.2.5","preact-compat":"^3.17.0","querystring":"^0.2.0","rc-queue-anim":"^1.0.1","rc-scroll-anim":"^1.0.3","rc-tween-one":"^1.1.2","react":"^15.0.0","react-color":"^2.11.7","react-copy-to-clipboard":"^5.0.0","react-document-title":"^2.0.1","react-dom":"^15.0.0","react-github-button":"^0.1.1","react-intl":"^2.0.1","react-sublime-video":"^0.2.0","react-test-renderer":"^15.5.4","remark-frontmatter":"^1.1.0","remark-parse":"^4.0.0","remark-stringify":"^4.0.0","remark-yaml-config":"^4.0.1","reqwest":"^2.0.5","rimraf":"^2.5.4","stylelint":"^8.0.0","stylelint-config-standard":"^17.0.0","typescript":"~2.5.3","unified":"^6.1.5","values.js":"^1.0.3","xhr2":"^0.1.3"},"files":["dist","lib","es"],"homepage":"http://ant.design/","keywords":["ant","design","react","react-component","component","components","ui","framework","frontend"],"license":"MIT","lint-staged":{"components/**/*.tsx":["lint-staged:ts"],"{tests,site,scripts,components}/**/*.{js,jsx}":["lint-staged:es"],"{site,components}/**/*.less":"stylelint --syntax less","components/*/demo/*.md":["lint-staged:demo"]},"main":"lib/index.js","module":"es/index.js","name":"antd","peerDependencies":{"react":"~0.14.0 || >=15.0.0","react-dom":"~0.14.0 || >=15.0.0"},"pre-commit":["lint-staged"],"repository":{"type":"git","url":"git+https://github.com/ant-design/ant-design.git"},"scripts":{"authors":"git log --format='%aN <%aE>' | sort -u | grep -v 'users.noreply.github.com' | grep -v 'gitter.im' | grep -v '.local>' | grep -v 'alibaba-inc.com' | grep -v 'alipay.com' | grep -v 'taobao.com' > AUTHORS.txt","compile":"antd-tools run compile","deploy":"antd-tools run clean && npm run site && node ./scripts/generateColorLess.js && bisheng gh-pages --push-only","dist":"antd-tools run dist","lint":"npm run lint:ts && npm run lint:es && npm run lint:demo && npm run lint:style","lint-fix":"npm run lint-fix:code && npm run lint-fix:demo","lint-fix:code":"eslint --fix tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint-fix:demo":"eslint-tinker ./components/*/demo/*.md","lint-fix:ts":"npm run tsc && antd-tools run ts-lint-fix","lint-staged":"lint-staged","lint-staged:demo":"cross-env RUN_ENV=DEMO eslint --ext '.md'","lint-staged:es":"eslint ./.eslintrc.js ./webpack.config.js","lint-staged:ts":"tsc && node node_modules/tslint/bin/tslint -c node_modules/antd-tools/lib/tslint.json","lint:demo":"cross-env RUN_ENV=DEMO eslint components/*/demo/*.md --ext '.md'","lint:es":"eslint tests site scripts components ./.eslintrc.js ./webpack.config.js --ext '.js,.jsx'","lint:style":"stylelint \"{site,components}/**/*.less\" --syntax less","lint:ts":"npm run tsc && antd-tools run ts-lint","pre-publish":"npm run test-all && node ./scripts/prepub","prepublish":"antd-tools run guard","pub":"antd-tools run pub","site":"cross-env NODE_ENV=production bisheng build --ssr -c ./site/bisheng.config.js","sort-api":"node ./scripts/sort-api-table.js","start":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development bisheng start -c ./site/bisheng.config.js --no-livereload","start:preact":"node ./scripts/generateColorLess.js && cross-env NODE_ENV=development REACT_ENV=preact bisheng start -c ./site/bisheng.config.js --no-livereload","test":"jest --config .jest.js","test-all":"./scripts/test-all.sh","test-node":"jest --config .jest.node.js","tsc":"tsc"},"title":"Ant Design","typings":"lib/index.d.ts","version":"2.13.11"}
 
 /***/ }),
 /* 502 */
@@ -61901,7 +61929,6 @@ var DraftEditor = function (_React$Component) {
     return function (e) {
       if (!_this2.props.readOnly) {
         var method = _this2._handler && _this2._handler[eventName];
-        console.log(e, eventName)
         method && method(_this2, e);
       }
     };
@@ -61931,8 +61958,8 @@ var DraftEditor = function (_React$Component) {
 
   DraftEditor.prototype.render = function render() {
     var _props = this.props,
-      readOnly = _props.readOnly,
-      textAlignment = _props.textAlignment;
+        readOnly = _props.readOnly,
+        textAlignment = _props.textAlignment;
 
     var rootClass = cx({
       'DraftEditor/root': true,
@@ -61963,8 +61990,7 @@ var DraftEditor = function (_React$Component) {
         'div',
         {
           className: cx('DraftEditor/editorContainer'),
-          ref: 'editorContainer'
-        },
+          ref: 'editorContainer' },
         React.createElement(
           'div',
           {
@@ -62013,8 +62039,7 @@ var DraftEditor = function (_React$Component) {
             spellCheck: allowSpellCheck && this.props.spellCheck,
             style: contentStyle,
             suppressContentEditableWarning: true,
-            tabIndex: this.props.tabIndex
-          },
+            tabIndex: this.props.tabIndex },
           React.createElement(DraftEditorContents, {
             blockRenderMap: this.props.blockRenderMap,
             blockRendererFn: this.props.blockRendererFn,
@@ -62091,8 +62116,8 @@ var DraftEditor = function (_React$Component) {
     var scrollParent = Style.getScrollParent(editorNode);
 
     var _ref = scrollPosition || getScrollPosition(scrollParent),
-      x = _ref.x,
-      y = _ref.y;
+        x = _ref.x,
+        y = _ref.y;
 
     !(editorNode instanceof HTMLElement) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'editorNode is not an HTMLElement') : invariant(false) : void 0;
     editorNode.focus();
@@ -98827,9 +98852,10 @@ exports.renderSubtreeIntoContainer = renderSubtreeIntoContainer;
 function unmountComponentAtNode(dom) {
     if (dom.__isContainer__ === true) {
         diff_2.recollectNodeChildren(dom.childNodes, true);
+        return true;
     }
     else {
-        console.error('不是容器');
+        return false;
     }
 }
 exports.unmountComponentAtNode = unmountComponentAtNode;
@@ -98906,7 +98932,7 @@ function removeNode(node) {
         parentNode.removeChild(node);
 }
 exports.removeNode = removeNode;
-function setAttribute(dom, name, value, prevProps, nextProps) {
+function setAttribute(dom, name, value, prevProps, nextProps, isSvg) {
     var oldvalue = prevProps[name];
     if (name === 'className')
         name = 'class';
@@ -98918,7 +98944,7 @@ function setAttribute(dom, name, value, prevProps, nextProps) {
             value(dom);
         }
     }
-    else if (name === 'class') {
+    else if (name === 'class' && !isSvg) {
         dom.className = value || '';
     }
     else if (name === 'style') {
@@ -98976,7 +99002,7 @@ function setAttribute(dom, name, value, prevProps, nextProps) {
         }
         (dom.__listeners__ || (dom.__listeners__ = {}))[name] = value;
     }
-    else if (name in dom) {
+    else if (name in dom && !isSvg) {
         try {
             // 有些属性不能设置到dom上。
             dom[name] = value || '';
@@ -98984,17 +99010,59 @@ function setAttribute(dom, name, value, prevProps, nextProps) {
         catch (e) {
             // dom.setAttribute(name, value);
         }
+        if (value == null || value === false)
+            dom.removeAttribute(name);
     }
     else {
-        if (value == null || value === false) {
-            dom.removeAttribute(name);
-        }
-        else {
-            dom.setAttribute(name, value);
-        }
+        // let ns = isSvg && (name !== (name = name.replace(/^xlink\:?/, '')));
+        // name = formatAttribute(dom, name);
+        // if (value == null || value === false) {
+        //     if (ns) dom.removeAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase());
+        //     else dom.removeAttribute(name);
+        // }
+        // else if (typeof value !== 'function') {
+        //     if (ns) dom.setAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase(), value);
+        //     else dom.setAttribute(name, value);
+        // }
+        setOrRemoveAttribute(dom, name, value, isSvg);
     }
 }
 exports.setAttribute = setAttribute;
+function setOrRemoveAttribute(dom, name, value, isSvg) {
+    // let ns = isSvg && (name !== (name = name.replace(/^xlink\:?/, '')));
+    name = formatAttribute(dom, name, isSvg);
+    if (value == null || value === false) {
+        if (isSvg)
+            dom.removeAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase());
+        else
+            dom.removeAttribute(name);
+    }
+    else if (typeof value !== 'function') {
+        if (isSvg)
+            dom.setAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase(), value);
+        else
+            dom.setAttribute(name, value);
+    }
+}
+exports.setOrRemoveAttribute = setOrRemoveAttribute;
+function formatAttribute(dom, name, isSvg) {
+    if (dom.nodeName === 'svg') {
+        return name;
+    }
+    else {
+        return name.replace(/^([a-z]+)([A-Z])/, function (a, b, c) {
+            var temp;
+            if (isSvg && b === 'xlink') {
+                temp = ':';
+            }
+            else {
+                temp = '-';
+            }
+            return b + temp + c.toLowerCase();
+        });
+        // return name.replace(/([A-Z])/g, function (x) { return '-' + x.toLowerCase() })
+    }
+}
 function eventProxy(e) {
     var type = event_1.EVENTOBJ[e.type];
     return this.__listeners__[type](new event_1.SyntheticEvent(e));

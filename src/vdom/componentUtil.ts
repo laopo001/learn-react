@@ -57,7 +57,7 @@ export function renderComponent(component: Component, opts: RenderMode, context,
         vnode.childrenRef_bind(component);
     }
     let nextContext = Object.assign({}, component.context, component.getChildContext());
-    let dom = diff(vnode, component.__dom__, nextContext);
+    let dom = diff(vnode, component.__dom__, nextContext,component);
     component.__dom__ = dom;
     setParentComponent(dom, component);
     if (!isCreate) {

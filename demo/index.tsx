@@ -123,7 +123,7 @@ class MyEditor extends React.Component {
     render() {
         return (
             <div onSelect={this.qq} >
-                <input value="123" />
+                <input  value="123" />
                 <div contentEditable>contentEditable </div>
                 <Editor editorState={this.state.editorState} onChange={this.onChange} />
                 <Mention

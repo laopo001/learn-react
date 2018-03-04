@@ -11,7 +11,7 @@ export interface ICache {
 }
 
 export abstract class Component {
-    __dom__: Element;
+    __dom__: any;
     __new__: ICache = {
         state: {},
         direct: false
