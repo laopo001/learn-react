@@ -18,7 +18,9 @@ export function create(vnode: VNode, context, parent) {
     return ret;
 }
 export function diff(vnode: any | VNode, dom, context, component?: Component) {
-    isSvgMode = dom != null && dom.ownerSVGElement !== undefined;
+    if (dom != null) {
+        isSvgMode = dom.ownerSVGElement !== undefined;
+    }
     return idiff(vnode, dom, context, component);
 }
 

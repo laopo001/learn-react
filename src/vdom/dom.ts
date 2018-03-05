@@ -4,23 +4,10 @@
 import { IS_NON_DIMENSIONAL } from '../config/';
 import { EVENTOBJ, OTHER_EVENT, Reverse_EVENTOBJ, SyntheticEvent } from './event';
 
-const options: any = {
-    event(e) {
-        e.persist = Object;
-        e.nativeEvent = e;
-        return e;
-    }
-
-};
-const events = {
-    focus: 'focusin',
-    blur: 'focusout'
-};
 export function removeNode(node) {
     let parentNode = node.parentNode;
     if (parentNode) parentNode.removeChild(node);
 }
-
 
 export function setAttribute(dom, name, value, prevProps, nextProps, isSvg) {
     let oldvalue = prevProps[name];
@@ -63,26 +50,16 @@ export function setAttribute(dom, name, value, prevProps, nextProps, isSvg) {
         //     return;
         // }
         if (name in OTHER_EVENT) {
-            // name = name.replace(/Capture$/, '')
             let useCapture = false;
-            // let domName = name.toLowerCase().substring(2);
             let domName = Reverse_EVENTOBJ[name];
             if (value) {
                 if (!oldvalue) {
-                    // if ((dom.nodeName === 'INPUT' || dom.nodeName === 'TEXTAREA') && name === 'change') {
-                    //     name = 'input';
-                    // }
-                    // if (name in events && !useCapture) {
-                    //     name = events[name];
-                    // }
                     dom.addEventListener(domName, eventProxy, useCapture);
                 }
-
             }
             else {
                 dom.removeEventListener(domName, eventProxy, useCapture);
             }
-
         }
         (dom.__listeners__ || (dom.__listeners__ = {}))[name] = value;
     } else if (name in dom && !isSvg) {
@@ -94,51 +71,41 @@ export function setAttribute(dom, name, value, prevProps, nextProps, isSvg) {
         }
         if (value == null || value === false) dom.removeAttribute(name);
     } else {
-
-        // let ns = isSvg && (name !== (name = name.replace(/^xlink\:?/, '')));
-        // name = formatAttribute(dom, name);
-        // if (value == null || value === false) {
-        //     if (ns) dom.removeAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase());
-        //     else dom.removeAttribute(name);
-        // }
-        // else if (typeof value !== 'function') {
-        //     if (ns) dom.setAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase(), value);
-        //     else dom.setAttribute(name, value);
-        // }
         setOrRemoveAttribute(dom, name, value, isSvg);
     }
 }
 export function setOrRemoveAttribute(dom, name, value, isSvg) {
-    // let ns = isSvg && (name !== (name = name.replace(/^xlink\:?/, '')));
-    name = formatAttribute(dom, name, isSvg);
+    name = formatAttribute(name);
+    let ns = false;
+    if (isSvg) {
+        let new_name = name.replace(/^xlink-/, '')
+        if (new_name !== name) {
+            ns = true;
+            name = new_name;
+        }
+    }
     if (value == null || value === false) {
-        if (isSvg) dom.removeAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase());
+        if (ns) dom.removeAttributeNS('http://www.w3.org/1999/xlink', name);
         else dom.removeAttribute(name);
     }
     else if (typeof value !== 'function') {
-        if (isSvg) dom.setAttributeNS('http://www.w3.org/1999/xlink', name.toLowerCase(), value);
+        if (ns) dom.setAttributeNS('http://www.w3.org/1999/xlink', name, value);
         else dom.setAttribute(name, value);
     }
 }
 
 var key = {
-    'viewBox': true
+    'viewBox': true,
+    'preserveAspectRatio': true
 }
 
-function formatAttribute(dom, name, isSvg) {
+function formatAttribute(name) {
     if (name in key) {
         return name;
     } else {
         return name.replace(/^([a-z]+)([A-Z])/, function (a, b, c) {
-            let temp;
-            if (isSvg && b === 'xlink') {
-                temp = ':';
-            } else {
-                temp = '-';
-            }
-            return b + temp + c.toLowerCase()
+            return b + '-' + c.toLowerCase()
         });
-        // return name.replace(/([A-Z])/g, function (x) { return '-' + x.toLowerCase() })
     }
 }
 

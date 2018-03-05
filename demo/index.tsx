@@ -6,13 +6,38 @@ import { render } from 'react-dom';
 import * as createReactClass from 'create-react-class';
 
 
-import { Pagination, Button, Icon, Affix, Breadcrumb, Menu, Dropdown, Select, Tooltip, Tabs, Mention } from 'antd';
+import { Pagination, Button, Icon, Affix, Breadcrumb, Menu, Dropdown, Select, Tooltip, Tabs, Mention, Cascader } from 'antd';
 const SubMenu = Menu.SubMenu;
 const MenuItemGroup = Menu.ItemGroup;
 const TabPane = Tabs.TabPane;
 const Option = Select.Option;
 const { toString, toContentState } = Mention;
 import { Editor, EditorState } from 'draft-js';
+
+const options = [{
+    value: 'zhejiang',
+    label: 'Zhejiang',
+    children: [{
+        value: 'hangzhou',
+        label: 'Hangzhou',
+        children: [{
+            value: 'xihu',
+            label: 'West Lake',
+        }],
+    }],
+}, {
+    value: 'jiangsu',
+    label: 'Jiangsu',
+    children: [{
+        value: 'nanjing',
+        label: 'Nanjing',
+        children: [{
+            value: 'zhonghuamen',
+            label: 'Zhong Hua Men',
+        }],
+    }],
+}];
+
 function ButtonDemo(props) {
     return <Button>123123</Button>
 }
@@ -86,18 +111,7 @@ function TooltipDemo() {
     </Tooltip>
 }
 
-const Es5 = React.createClass({
-    getInitialState() {
-        return { name: 123 };
-    },
-    render: function () {
-        return (
-            <div>{this.state.name}
-                <img alt={this.props.description} src={this.props.src} />
-            </div>
-        );
-    }
-});
+
 
 const Greeting = createReactClass({
     componentDidMount() {
@@ -123,19 +137,9 @@ class MyEditor extends React.Component {
     render() {
         return (
             <div onSelect={this.qq} >
-                <input  value="123" />
+                <input value="123" />
                 <div contentEditable>contentEditable </div>
                 <Editor editorState={this.state.editorState} onChange={this.onChange} />
-                <Mention
-                    style={{ width: '100%' }}
-                    onChange={(suggestion) => {
-                        console.log('onSelect', suggestion);
-                    }}
-                    defaultValue={toContentState('@afc163')}
-                    suggestions={['afc163', 'benjycui', 'yiminghe', 'RaoHai', '中文', 'にほんご']} onSelect={(contentState) => {
-                        console.log(toString(contentState));
-                    }}
-                />
             </div>
         );
     }
@@ -160,6 +164,11 @@ class Root extends Component {
         }
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
             <MyEditor />
+            <Cascader options={options} onChange={(value) => {
+                console.log(value);
+            }
+            } placeholder="Please select" />
+
             <input onChange={(e) => { console.log(e); }} />
             <Greeting name='ggg' />
             <br />
@@ -168,7 +177,6 @@ class Root extends Component {
                 <TabPane tab='Tab 2' key='2'>Content of Tab Pane 2</TabPane>
                 <TabPane tab='Tab 3' key='3'>Content of Tab Pane 3</TabPane>
             </Tabs>}
-            <Es5 src='https://ss2.baidu.com/6ONYsjip0QIZ8tyhnq/it/u=3247817123,3423989056&fm=173&s=C5F21CC56C01014B5291A9180300D0D3&w=218&h=146&img.JPG' />
             {this.state.c}
             {/* {this.state.name} <br /> */}
 

@@ -1,3 +1,5 @@
 node_modules
 npm-debug.log
 lib/
+build/index.js
+build/index.js.map
