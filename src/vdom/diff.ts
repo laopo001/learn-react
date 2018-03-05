@@ -153,14 +153,21 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
 
 function diffProps(props, out) {
     let oldProps = out.oldVNode !== undefined ? out.oldVNode.props : {};
+    const keys = {};
     for (let name in props) {
         if (name === 'children') continue;
+
         if (out && out[name] !== props[name]) {
             setAttribute(out, name, props[name], oldProps, props, isSvgMode);
         }
-        if (out.oldVNode && !(name in oldProps)) {
+        if (name in oldProps) {
+            // setOrRemoveAttribute(out, name, null, isSvgMode);
+            keys[name] = true;
+        }
+    }
+    for (let name in oldProps) {
+        if (!keys[name]) {
             setOrRemoveAttribute(out, name, null, isSvgMode);
-            // out.removeAttribute(name);
         }
     }
 }
@@ -174,7 +181,6 @@ export function recollectNodeChildren(doms, isRemove) {
             recollectNodeTree(doms[i], isRemove);
         }
     }
-
 }
 
 export function recollectNodeTree(dom, isRemove, component?: Component) {
