@@ -20,7 +20,11 @@
       "./dist"
     ],
     "outDir": "node_modules/treact",
-    "types": ["react","react-dom"]
+    "types": [
+      "react",
+      "react-dom"
+    ],
+    "allowSyntheticDefaultImports": true
   },
   "files": [
     "./src/index.ts"

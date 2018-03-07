@@ -1,6 +1,8 @@
 var webpack = require('webpack');
 var path = require('path')
 var BrowserSyncPlugin = require('browser-sync-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+
 module.exports = {
 
     //页面入口文件配置
@@ -20,11 +22,16 @@ module.exports = {
             port: 5000,
             server: { baseDir: ['build'] }
         }),
+
     ],
     module: {
         //加载器配置
         loaders: [
-            { test: /\.tsx?$/, loader: 'ts-loader' },
+            {
+                test: /\.tsx?$/, loader: 'ts-loader', options: {
+                    configFile: 'tsconfig.json'
+                }
+            },
         ]
     },
     resolve: {

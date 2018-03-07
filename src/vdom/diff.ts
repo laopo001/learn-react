@@ -63,13 +63,17 @@ export function idiff(vnode: any | VNode, dom, context, component?: Component) {
     }
     if (dom && dom !== out && !dom.__moveOut__) {
         dom.parentNode.replaceChild(out, dom);
-        if (dom.__render__ === true) {
-            // dom.__moveOut__ = true;
-            recollectNodeTree(dom, false, component);
-            delete dom.__render__;
-        } else {
-            recollectNodeTree(dom, false);
-        }
+        recollectNodeTree(dom, false, component);
+        // if (dom.__render__ === true) {
+        //     // dom.__moveOut__ = true;
+        //     if (component) {
+        //         recollectNodeTree(dom, false, component);
+        //         delete dom.__render__;
+        //     }
+
+        // } else {
+        //     recollectNodeTree(dom, false);
+        // }
     }
     isSvgMode = prevSvgMode;
     return out;

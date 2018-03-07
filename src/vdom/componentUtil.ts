@@ -57,7 +57,7 @@ export function renderComponent(component: Component, opts: RenderMode, context,
         vnode.childrenRef_bind(component);
     }
     let nextContext = Object.assign({}, component.context, component.getChildContext());
-    let dom = diff(vnode, component.__dom__, nextContext,component);
+    let dom = diff(vnode, component.__dom__, nextContext, component);
     component.__dom__ = dom;
     setParentComponent(dom, component);
     if (!isCreate) {
@@ -79,18 +79,25 @@ export function setParentComponent(dom, component: Component) {
     }
 }
 
-export function findParentComponent(dom, vnode: VNode): Component | null {
+export function findParentComponent(dom, vnode: VNode, last?: boolean): Component | null {
     if (dom == null) {
         return null;
     }
+    if (last) {
+        let c: Component = dom.__parentComponent__;
+        while (c) {
+            c = c.__parentComponent__;
+        }
+        return c;
+    }
+
     if (dom.__parentComponent__ == null) {
         return null;
     } else {
         let c: Component = dom.__parentComponent__;
-        if (c.constructor === vnode.name) { return c; }
-        while (c.__parentComponent__) {
-            c = c.__parentComponent__;
+        while (c) {
             if (c.constructor === vnode.name) { return c; }
+            c = c.__parentComponent__;
         }
         return null;
     }

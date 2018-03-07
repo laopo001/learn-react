@@ -113,38 +113,15 @@ function TooltipDemo() {
 
 
 
-const Greeting = createReactClass({
-    componentDidMount() {
-        this.setState({ cout: 1 });
-    },
-    render: function () {
-        return <h1>Hello, {this.props.name}</h1>;
-    }
-});
-class MyEditor extends React.Component {
-    onChange;
-    state;
-    constructor(props) {
-        super(props);
-        this.state = { editorState: EditorState.createEmpty() };
-        this.onChange = (editorState) => {
-            this.setState({ editorState })
-        };
-    }
-    qq(e) {
-        console.log(e.type, e.target)
-    }
-    render() {
-        return (
-            <div onSelect={this.qq} >
-                <input value="123" />
-                <div contentEditable>contentEditable </div>
-                <Editor editorState={this.state.editorState} onChange={this.onChange} />
-            </div>
-        );
-    }
+interface AppProps { }
+interface AppState {
+    name: string;
+    cout: number;
+    c: JSX.Element | string;
 }
-class Root extends Component {
+
+
+class Root extends Component<AppProps, AppState> {
     state = {
         name: '',
         id: 'qq',
@@ -163,14 +140,14 @@ class Root extends Component {
             return null;
         }
         return <div id='qq' style={{ background: '#eee', height: 1000 }}>
-            <MyEditor />
+
             <Cascader options={options} onChange={(value) => {
                 console.log(value);
             }
             } placeholder="Please select" />
 
             <input onChange={(e) => { console.log(e); }} />
-            <Greeting name='ggg' />
+
             <br />
             {<Tabs defaultActiveKey='1' onChange={() => { }}>
                 <TabPane tab='Tab 1' key='1'>Content of Tab Pane 11</TabPane>

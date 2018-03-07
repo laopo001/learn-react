@@ -1,6 +1,6 @@
 {
   "name": "abc-react",
-  "version": "0.2.8",
+  "version": "0.2.10",
   "description": "无",
   "main": "lib/index.js",
   "scripts": {
@@ -15,15 +15,17 @@
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {
-    "@types/react": "^16.0.10",
+    "@types/react": "^16.0.31",
     "@types/react-dom": "^16.0.4",
     "antd": "^2.13.10",
     "browser-sync": "^2.18.12",
     "browser-sync-webpack-plugin": "^1.2.0",
     "create-react-class": "^15.6.2",
+    "enhanced-resolve": "^4.0.0",
     "jest": "^21.2.1",
     "ts-loader": "^0.8.2",
-    "typescript": "^2.3.4",
+    "tsconfig-paths-webpack-plugin": "^2.0.0",
+    "typescript": "^2.8.0-insiders.20180127",
     "webpack": "^2.7.0",
     "webpack-dev-server": "^2.11.1"
   }
