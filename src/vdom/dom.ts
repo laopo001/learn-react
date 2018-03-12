@@ -2,7 +2,7 @@
  * @author dadigua
  */
 import { IS_NON_DIMENSIONAL } from '../config/';
-import { EVENTOBJ, OTHER_EVENT, Reverse_EVENTOBJ, SyntheticEvent } from './event';
+import { EVENTOBJ, OTHER_EVENT, Reverse_EVENTOBJ, SyntheticEvent, EVENT_LISTENER } from './event';
 
 export function removeNode(node) {
     let parentNode = node.parentNode;
@@ -62,6 +62,7 @@ export function setAttribute(dom, name, value, prevProps, nextProps, isSvg) {
             }
         }
         (dom.__listeners__ || (dom.__listeners__ = {}))[name] = value;
+        EVENT_LISTENER[name] = true;
     } else if (name in dom && !isSvg) {
         try {
             // 有些属性不能设置到dom上。
