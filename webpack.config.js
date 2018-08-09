@@ -37,7 +37,7 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.tsx', '.js'],
         alias: {
-            react: 'treact',
+            'react': 'treact',
             'react-dom': 'treact'
         }
     },

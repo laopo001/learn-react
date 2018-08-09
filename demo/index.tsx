@@ -119,7 +119,74 @@ interface AppState {
     cout: number;
     c: JSX.Element | string;
 }
+class AppTest extends Component<any, any> {
+    constructor(props) {
+        super(props);
+        this.state = {
 
+        };
+    }
+    componentDidMount(){
+        console.log(23)
+    }
+
+    render() {
+        return (
+            <div>
+
+            
+            </div >
+        );
+    }
+}
+
+class App extends Component<any, any> {
+    constructor(props) {
+        super(props);
+        this.state = {
+            name: 'React',
+            a: Array(5).fill(1).map((e, idx) => {
+                return {
+                    id: idx,
+                    name: `aweaw${idx}`,
+                };
+            })
+        };
+    }
+
+    test() {
+        // this.state.a.unshift({
+        //     id: 6,
+        //     name: `66666`,
+        // })
+        this.setState({
+            a: this.state.a.reverse()
+        }, () => {
+            console.log(this.state.a);
+
+        })
+
+    }
+    render() {
+        return (
+            <div>
+
+                <p>
+                    Start editing to see some magic happen :)
+          </p>
+                <button onClick={this.test.bind(this)}>test</button>
+                <div>
+                    {
+                        this.state.a.map((x) => {
+                            return <div key={x.id}>{x.name}<AppTest/></div>
+                        })
+                    }
+
+                </div>
+            </div >
+        );
+    }
+}
 
 class Root extends Component<AppProps, AppState> {
     state = {
@@ -169,6 +236,7 @@ class Root extends Component<AppProps, AppState> {
             {<button onClick={() => {
                 this.setState({ name: 'root++', c: <Book long='ppp'>children</Book> });
             }}>update</button>}
+            <br />
 
         </div >;
     }
@@ -256,4 +324,4 @@ class Me extends React.Component {
         );
     }
 }
-render(<Root />, document.getElementById('root'));
+render(<App />, document.getElementById('root'));

@@ -137,6 +137,15 @@ function diffChild(vnodeChildren: VNode[], domChildren: any[], context, out) {
             } else {
                 insertAfter(newChildDOM, lastChildDom, out);
             }
+        } else {
+            if (lastChildDom == null) {
+                let first = out.childNodes[0];
+                if (first == null) { out.appendChild(newChildDOM); }
+                else { out.insertBefore(newChildDOM, first); }
+
+            } else {
+                insertAfter(newChildDOM, lastChildDom, out);
+            }
         }
 
         lastChildDom = newChildDOM;
