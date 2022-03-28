@@ -5,7 +5,7 @@
 import { RenderMode } from '../config/';
 import { Component, StatelessComponent } from '../component';
 import { VNode } from '../vnode';
-import { diff, recollectNodeTree } from './diff';
+import { diff } from './diff';
 import { propsClone } from './util';
 
 export let DidMounts = [];
@@ -56,26 +56,104 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     if (vnode != null) {
         vnode.childrenRef_bind(component);
     }
+
     let nextContext = Object.assign({}, component.context, component.getChildContext());
-    let dom = diff(vnode, component.__dom__, nextContext, component);
-    component.__dom__ = dom;
-    setParentComponent(dom, component);
-    if (!isCreate) {
-        component.componentDidUpdate && component.componentDidUpdate(old.props, old.state, old.context);
+    if (vnode == null) {
+        return
     }
-    return dom;
+    try {
+        let i = 0;
+
+        let oldVNode = component.oldVNode;
+        let dom = component.__dom__;
+        let last = oldVNode;
+        while (last) {
+            dom = last.__dom__;
+            if (dom != null) {
+                break;
+            }
+            last = last.child
+        }
+        let parent = dom.parentElement;
+        let first = null;
+        let ret;
+        // let fristvnode = vnode;
+        while (i < Infinity) {
+            let j = 0;
+            ret = diff(vnode, oldVNode, dom, context);
+            if (ret) {
+                vnode.__dom__ = ret;
+            }
+            if (first == null && ret) {
+                first = ret;
+            }
+            if (j == 0 && (vnode.child && vnode.child.traversed == false)) {
+                if (typeof vnode.name != 'function') {
+                    if (dom != ret) {
+                        ret && parent.replaceChild(dom, ret);
+                    }
+                    parent = ret;
+                    dom = dom.firstChild;
+                }
+                vnode = vnode.child;
+                oldVNode = oldVNode.child;
+                j = 1;
+            }
+            if (j == 0 && (vnode.child && vnode.child.traversed && vnode.sibling || !vnode.child && vnode.sibling)) {
+                if (dom != ret) {
+                    ret && parent.replaceChild(dom, ret);
+                }
+                vnode = vnode.sibling;
+                oldVNode = oldVNode.sibling;
+                dom = dom.nextSibling;
+                j = 1;
+            }
+            if (j == 0 && (vnode.child && vnode.child.traversed && !vnode.sibling && vnode.return || !vnode.child && !vnode.sibling && vnode.return)) {
+                vnode = vnode.return;
+                oldVNode = oldVNode.return;
+                if (typeof vnode.name != 'function') {
+                    if (dom != ret) {
+                        ret && parent.replaceChild(dom, ret);
+                    }
+                    dom = dom.parentElement;
+                    parent = parent.parentElement
+                }
+                j = 1;
+            }
+
+            if (j == 0) {
+                break;
+            }
+            // vnode = next;
+            i++;
+        }
+
+        // component.__dom__ = dom;
+        component.oldVNode = vnode;
+        // setParentComponent(dom, component);
+        if (!isCreate) {
+            component.componentDidUpdate && component.componentDidUpdate(old.props, old.state, old.context);
+        }
+        return first;
+    } catch (e) {
+        console.log(e)
+    }
 }
 export function setParentComponent(dom, component: Component) {
-    if (dom.__parentComponent__ == null) {
-        dom.__parentComponent__ = component;
-    } else {
-        let c = dom.__parentComponent__;
-        if (c === component) { return; }
-        while (c.__parentComponent__) {
-            c = c.__parentComponent__;
+    try {
+        if (dom.__parentComponent__ == null) {
+            dom.__parentComponent__ = component;
+        } else {
+            let c = dom.__parentComponent__;
             if (c === component) { return; }
+            while (c.__parentComponent__) {
+                c = c.__parentComponent__;
+                if (c === component) { return; }
+            }
+            c.__parentComponent__ = component;
         }
-        c.__parentComponent__ = component;
+    } catch (e) {
+        console.log(e)
     }
 }
 
@@ -135,6 +213,38 @@ export function createComponent(Ctor, props, context) {
     }
     return component;
 }
+export function GetComponentVNode(vnode: VNode, dom, context: any) {
+    let component: Component = findParentComponent(dom, vnode);
+    if (component && component.constructor === vnode.name) {
+        if (vnode.props.ref) {
+            vnode.props.ref(component.getPublicInstance());
+            delete vnode.props.ref;
+        }
+        component.__new__.props = propsClone({}, vnode.name.defaultProps, vnode.props);
+        component.__new__.context = Object.assign({}, component.context, context);
+        component.__new__.direct = true;
+        component.componentWillReceiveProps(component.__new__.props, component.__new__.context);
+        component.__new__.direct = false;
+
+        let componentvnode = component.render(component.props, component.context);
+        componentvnode.component = component;
+        component.oldVNode = componentvnode;
+        return componentvnode;
+    } else {
+
+        let component: Component = createComponent(vnode.name, vnode.props, context);
+        // 如果 props绑定ref
+        if (vnode.props.ref) {
+            vnode.props.ref(component.getPublicInstance());
+            delete component.props.ref;
+        }
+        let componentvnode = component.render(component.props, component.context);
+        componentvnode.component = component;
+        component.oldVNode = componentvnode;
+        return componentvnode;
+    }
+}
+
 export function RenderComponentFromVNode(vnode: VNode, dom, context: any) {
     let component: Component = findParentComponent(dom, vnode);
     if (component && component.constructor === vnode.name) {

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "npm run build",
     "test": "jest",
+    "lib": "tsc -w",
     "demo": "webpack --display-error-details --progress --colors --watch",
     "watch": "webpack --display-error-details --progress --colors --watch",
     "build": "webpack --display-error-details --progress --colors",

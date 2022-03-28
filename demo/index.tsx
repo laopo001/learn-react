@@ -126,16 +126,16 @@ class AppTest extends Component<any, any> {
 
         };
     }
-    componentDidMount(){
+    componentDidMount() {
         console.log(23)
     }
 
     render() {
         return (
-            <div>
+            <span>
+                AppTest
 
-            
-            </div >
+            </span >
         );
     }
 }
@@ -169,16 +169,16 @@ class App extends Component<any, any> {
     }
     render() {
         return (
-            <div>
+            <div id="test">
 
                 <p>
                     Start editing to see some magic happen :)
-          </p>
+                </p>
                 <button onClick={this.test.bind(this)}>test</button>
                 <div>
-                    {
+                    { 
                         this.state.a.map((x) => {
-                            return <div key={x.id}>{x.name}<AppTest/></div>
+                            return <div key={x.id}>{x.name}<AppTest /></div>
                         })
                     }
 
@@ -276,7 +276,7 @@ class Q extends Component {
         return (
             <div>
                 123123123
-        </div>
+            </div>
         );
     }
 }
@@ -303,10 +303,10 @@ class Me extends React.Component {
             >
                 <Menu.Item key="mail">
                     <Icon type="mail" />Navigation One
-          </Menu.Item>
+                </Menu.Item>
                 <Menu.Item key="app" disabled>
                     <Icon type="appstore" />Navigation Two
-          </Menu.Item>
+                </Menu.Item>
                 <SubMenu title={<span><Icon type="setting" />Navigation Three - Submenu</span>}>
                     <MenuItemGroup title="Item 1">
                         <Menu.Item key="setting:1">Option 1</Menu.Item>

@@ -12,11 +12,13 @@ export interface ICache {
 
 export abstract class Component {
     __dom__: any;
+    oldVNode: any;
     __new__: ICache = {
         state: {},
         direct: false
     };
     __parentComponent__: Component;
+    vnode: any;
     state: any = {};
     refs: any = {};
     public _renderCallbacks = [];

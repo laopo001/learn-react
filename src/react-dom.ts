@@ -6,7 +6,7 @@ import { h } from './h';
 import { Component } from './component';
 import { renderComponent, RenderComponentFromVNode, findParentComponent } from './vdom/componentUtil';
 import { RenderMode } from './config/';
-import { recollectNodeChildren } from './vdom/diff';
+// import { recollectNodeChildren } from './vdom/diff';
 
 export function findDOMNode(component: Component) {
     return component && component.__dom__ || component;
@@ -84,7 +84,7 @@ export function renderSubtreeIntoContainer(parentComponent, vnode, container, ca
 
 export function unmountComponentAtNode(dom) {
     if (dom.__isContainer__ === true) {
-        recollectNodeChildren(dom.childNodes, true);
+        // recollectNodeChildren(dom.childNodes, true);
         return true;
     } else{
         return false;
