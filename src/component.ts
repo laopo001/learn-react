@@ -42,7 +42,6 @@ export abstract class Component {
             enqueueRender(this);
         } else {
             this.__new__.state = Object.assign(this.__new__.state, state);
-            // this.__new__.state = Object.assign({}, this.state, state);
             if (callback) (this._renderCallbacks = (this._renderCallbacks || [])).push(callback);
         }
 

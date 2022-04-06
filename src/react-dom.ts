@@ -53,7 +53,7 @@ export const Children = {
 
 
 export function render(vnode, parent): Component {
-    let dom:any = create(vnode, {}, parent);
+    let dom: any = create(vnode, {}, parent);
     dom.__isContainer__ = true;
     return findParentComponent(dom, vnode);
 }
@@ -86,7 +86,7 @@ export function unmountComponentAtNode(dom) {
     if (dom.__isContainer__ === true) {
         // recollectNodeChildren(dom.childNodes, true);
         return true;
-    } else{
+    } else {
         return false;
     }
 

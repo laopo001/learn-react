@@ -30,7 +30,7 @@ export class VNode {
         this.name = x;
     }
     group: number;
-    parentComponent: Component;
+    __parentComponent__: Component;
     component: Component;
     traversed = false;
     child: VNode;        // 子节点

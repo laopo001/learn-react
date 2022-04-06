@@ -15,9 +15,9 @@ export function create(vnode: VNode, context, parent: Element) {
     try {
         let i = 0;
         let ret
-        while (i < Infinity) {
+        let run = () => {
             let j = 0;
-            ret = diff(vnode, null, null, context);
+            ret = diff(vnode, null, null, parent, context);
             if (ret) {
                 vnode.__dom__ = ret;
             }
@@ -25,7 +25,6 @@ export function create(vnode: VNode, context, parent: Element) {
             if (j == 0 && (vnode.child && vnode.child.traversed == false)) {
                 next = vnode.child
                 if (typeof vnode.name != 'function') {
-                    ret && parent.appendChild(ret)
                     parent = ret;
                 }
                 j = 1;
@@ -38,34 +37,39 @@ export function create(vnode: VNode, context, parent: Element) {
             if (j == 0 && (vnode.child && vnode.child.traversed && !vnode.sibling && vnode.return || !vnode.child && !vnode.sibling && vnode.return)) {
                 next = vnode.return;
                 if (typeof vnode.name != 'function') {
-                    ret && parent.appendChild(ret);
                     parent = parent.parentElement
                 }
                 j = 1;
             }
 
             if (j == 0) {
-                break;
+                // break;
+            } else {
+                setTimeout(run, 0);
             }
             vnode = next;
             i++;
         }
-
+        run();
         callDidMount();
         return parent;
     } catch (e) {
         console.log(e)
     }
-
 }
+
+
 type Node = Base | undefined | VNode;
-export function diff(vnode: Node, oldVNode: Node, dom: Element, context, component?: Component): Element {
+export function diff(vnode: Node, oldVNode: Node, dom: Element, domParent: Element, context, component?: Component): Element {
+    if (oldVNode != null && vnode == null) {
+        dom.remove();
+        return
+    }
     if (vnode == null || vnode.traversed == true) {
         return
     }
     vnode.traversed = true
     let out;
-
     if (vnode instanceof VNode) {
         isSvgMode = vnode.name === 'svg' ? true : vnode.name === 'foreignObject' ? false : isSvgMode;
         if (typeof vnode.name === 'string') {
@@ -103,7 +107,11 @@ export function diff(vnode: Node, oldVNode: Node, dom: Element, context, compone
     }
 
     // console.log(vnode)
-
+    if (dom == null) {
+        out && domParent.append(out);
+    } else if (dom != out) {
+        out && domParent.replaceChild(dom, out);
+    }
     return out;
 }
 

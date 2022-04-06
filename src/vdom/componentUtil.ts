@@ -78,9 +78,15 @@ export function renderComponent(component: Component, opts: RenderMode, context,
         let first = null;
         let ret;
         // let fristvnode = vnode;
-        while (i < Infinity) {
+        let last_now = Date.now()
+        let run = (sync) => {
+            if (!sync) {
+                last_now = Date.now()
+            }
+            // while (i < Infinity) {
+            let endSiblingNode, endSiblingElement;
             let j = 0;
-            ret = diff(vnode, oldVNode, dom, context);
+            ret = diff(vnode, oldVNode, dom, parent, context);
             if (ret) {
                 vnode.__dom__ = ret;
             }
@@ -89,48 +95,74 @@ export function renderComponent(component: Component, opts: RenderMode, context,
             }
             if (j == 0 && (vnode.child && vnode.child.traversed == false)) {
                 if (typeof vnode.name != 'function') {
-                    if (dom != ret) {
-                        ret && parent.replaceChild(dom, ret);
-                    }
                     parent = ret;
-                    dom = dom.firstChild;
+                    dom = dom && dom.firstChild;
                 }
                 vnode = vnode.child;
-                oldVNode = oldVNode.child;
+                oldVNode = oldVNode && oldVNode.child;
                 j = 1;
             }
             if (j == 0 && (vnode.child && vnode.child.traversed && vnode.sibling || !vnode.child && vnode.sibling)) {
-                if (dom != ret) {
-                    ret && parent.replaceChild(dom, ret);
-                }
                 vnode = vnode.sibling;
-                oldVNode = oldVNode.sibling;
-                dom = dom.nextSibling;
+                if (endSiblingNode == null && oldVNode && oldVNode.sibling == null) {
+                    endSiblingNode = oldVNode;
+                    endSiblingElement = dom;
+                }
+                oldVNode = oldVNode && oldVNode.sibling;
+                dom = dom && dom.nextSibling;
                 j = 1;
             }
             if (j == 0 && (vnode.child && vnode.child.traversed && !vnode.sibling && vnode.return || !vnode.child && !vnode.sibling && vnode.return)) {
                 vnode = vnode.return;
-                oldVNode = oldVNode.return;
-                if (typeof vnode.name != 'function') {
-                    if (dom != ret) {
-                        ret && parent.replaceChild(dom, ret);
+                if (endSiblingNode) {
+                    oldVNode = endSiblingNode.return;
+                    endSiblingNode = null
+                    dom = endSiblingElement;
+                    endSiblingElement = null
+                } else {
+                    if (oldVNode != null) {
+                        let nextSibling = dom.nextSibling;
+                        while (oldVNode.return == null) {
+                            oldVNode = oldVNode.sibling;
+                            dom = nextSibling;
+
+                            nextSibling = dom && dom.nextSibling
+                            oldVNode && diff(null, oldVNode, dom, parent, context);
+                        }
+                        oldVNode = oldVNode.return;
+                    } else {
+                        oldVNode = null;
                     }
-                    dom = dom.parentElement;
+                }
+
+                if (typeof vnode.name != 'function') {
+                    dom = parent;
                     parent = parent.parentElement
                 }
                 j = 1;
             }
-
+            component.oldVNode = vnode;
             if (j == 0) {
-                break;
-            }
-            // vnode = next;
-            i++;
-        }
+                // break;
+            } else {
+                let now = Date.now()
 
-        // component.__dom__ = dom;
-        component.oldVNode = vnode;
-        // setParentComponent(dom, component);
+                if (now - last_now < 5) {
+                    run(true);
+                } else {
+                    console.log(123)
+                    requestAnimationFrame(function () {
+                        run(false);
+                    });
+                }
+
+            }
+            i++;
+
+            // }
+        }
+        run(true);
+
         if (!isCreate) {
             component.componentDidUpdate && component.componentDidUpdate(old.props, old.state, old.context);
         }
@@ -138,6 +170,7 @@ export function renderComponent(component: Component, opts: RenderMode, context,
     } catch (e) {
         console.log(e)
     }
+
 }
 export function setParentComponent(dom, component: Component) {
     try {
